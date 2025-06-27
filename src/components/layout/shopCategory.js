@@ -27,7 +27,7 @@ export default function ShopCategory() {
     }, [])
     const handleCategoryClick = (e) => {
         if (e.children?.length > 0) {
-            router.push(`/catalog/${e.id}`);
+            router.push(`/catelog/${e.id}`);
         } else {
             router.push(`/shop/${e.name}?cate=cate1`);
         }
@@ -77,7 +77,7 @@ export default function ShopCategory() {
                                     <img src={e.image || "assets/img/shop-category/1.png"} alt={e.name} className="center" />
                                     <div className="category-content">
                                         <div className="category-title">
-                                            {/* <a href={`/catalog/${e.id}`}>{e.name}</a> */}
+                                            {/* <a href={`/catelog/${e.id}`}>{e.name}</a> */}
                                             <h2 style={{ color: "black", textAlign: "center" }}>{e.name}</h2>
                                         </div>
                                         {/* <div className="vehicle-count">

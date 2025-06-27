@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 *::before,
 *::after {
     -webkit-box-sizing: border-box;
@@ -3239,7 +3243,7 @@ hr {
 }
 
 .category-list-products__title {
-    margin-top: 14px;
+    /* margin-top: 14px; */
     color: var(--sub-text-color);
 }
 
@@ -3261,6 +3265,38 @@ hr {
     }
 }
 
+.child_category-details {
+    padding-right: 1.5rem !important;
+}
+
+.child_category-list {
+    margin-bottom: 0.25rem !important;
+
+}
+
+.child_category_sublist {
+    margin-right: 0.5rem !important;
+
+}
+
+.child_category_name {
+    color: #343a40;
+
+}
+
+.subchild__main {
+    margin-top: 5px;
+}
+
+.subchild_list {
+    font-size: 16px;
+    color: var(--sub-text-color);
+    cursor: pointer;
+}
+
+.subchild_list:hover {
+    color: var(--primary-color);
+}
 
 /* category box css end */
 /* shop list box css start */
@@ -3355,9 +3391,9 @@ hr {
     font-size: 14px;
     line-height: 22px;
     font-weight: 500;
-    border: 1px solid var(--border-color);
+    /* border: 1px solid var(--border-color); */
     box-shadow: 0 2px 7px 0 rgba(0, 0, 0, .07);
-    background-image: url(/assets/img/media/star.91d69b98.svg);
+    /* background-image: url(/assets/img/media/star.91d69b98.svg); */
     background-repeat: no-repeat;
     background-position: left 10px center;
 }
