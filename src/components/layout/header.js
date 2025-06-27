@@ -16,11 +16,12 @@ export default function Header() {
     const pathname = usePathname();
     const pathName = location.pathname;
     const user = JSON.parse(localStorage.getItem("USER"));
-    const { login_cart, addto_cart } = useSelector((state) => ({ ...state.products }));
+    const { login_cart, addto_cart, add_wish } = useSelector((state) => ({ ...state.products }));
     const [isOpen, setIsOpen] = useState(false);
     const textColor = pathname === "/" ? "white" : "#000";
     const isActive = (path) => pathname === path;
     console.log(addto_cart, "addto_cart");
+    console.log(add_wish, "add_wish ");
     const toggleDrawer = () => {
         setIsOpen(!isOpen);
     };
@@ -106,6 +107,12 @@ export default function Header() {
 
                     {/* Right Side */}
                     <div className="d-flex align-items-center ">
+                        <Link href="/wishlist" className="position-relative btn btn-outline ms-2">
+                            <AiOutlineHeart style={{ fontSize: "28px" }} />
+                            {
+                                add_wish?.length > 0 ? <span className="items__count">{add_wish?.length}</span> : ""
+                            }
+                        </Link>
                         <Link href="/cart" className="position-relative btn btn-outline ms-2">
                             <AiOutlineShoppingCart style={{ fontSize: "28px" }} />
                             {

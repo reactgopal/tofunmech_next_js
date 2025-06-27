@@ -15,6 +15,7 @@ import { addProducts, addToWishlist, emptyProducts, removeProductWishlist } from
 import InfiniteScroll from 'react-infinite-scroll-component';
 import Link from 'next/link';
 import { BsHeart, BsHeartFill } from 'react-icons/bs';
+import Breadcrumbs from '@/utils/Breadcrumbs';
 
 export default function ShopList() {
     const dispatch = useDispatch();
@@ -146,7 +147,7 @@ export default function ShopList() {
                         </h2>
                     </div>
                     <div className="shop-list__breadcrumb navigation-page">
-                        <a className="neutral-700 text-md-medium" href="/">Home</a>
+                        {/* <a className="neutral-700 text-md-medium" href="/">Home</a>
                         <span className="@@ds-prev-page">
                             <img src="/assets/img/icons/arrow-right.svg" alt="Carento" />
                         </span>
@@ -154,7 +155,8 @@ export default function ShopList() {
                         <span>
                             <img src="/assets/img/icons/arrow-right.svg" alt="Carento" />
                         </span>
-                        <a className="neutral-1000 text-md-bold text-nowrap" href="#">All items</a>
+                        <a className="neutral-1000 text-md-bold text-nowrap" href="#">All items</a> */}
+                        <Breadcrumbs />
                     </div>
                 </div>
             </div>
@@ -358,11 +360,44 @@ export default function ShopList() {
                                                                     <img src={e?.image} alt={e?.name} />
                                                                 </div>
                                                                 <div className="car-list-card__content">
-                                                                    {/* <div className="shop-list-products__rating">
-                                                                        <span className="shop-list-products__rating-value d-flex justify-content-start">
-                                                                            4.9 5 <span className="text-xs-medium neutral-500">(672 reviews)</span>
-                                                                        </span>
-                                                                    </div> */}
+                                                                    <div className="shop-list-products__rating">
+                                                                        {/* <span className="shop-list-products__rating-value"> */}
+                                                                        {/* 4.9 5 <span className="text-xs-medium neutral-500">(672 reviews)</span> */}
+                                                                        {/* <BsHeart /> */}
+                                                                        {/* </span> */}
+                                                                        {
+                                                                            user?.success === true ? (
+                                                                                <>
+                                                                                    {productwishIdsArray.includes(e?.id) ? (
+                                                                                        <span className="shop-list-products__rating-value">
+                                                                                            <BsHeartFill
+                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                onClick={() => removeElement(e?.id)}
+                                                                                            />
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        <span className="shop-list-products__rating-value">
+                                                                                            <IoMdHeartEmpty
+                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                onClick={() => handleWish(e?.id)}
+                                                                                            />
+                                                                                        </span>
+                                                                                    )}
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <a href="/login" rel="noopener noreferrer">
+                                                                                        <span className="shop-list-products__rating-value">
+                                                                                            <IoMdHeartEmpty
+                                                                                                // style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                className='text-black' style={{ color: "black" }}
+                                                                                            />
+                                                                                        </span>
+                                                                                    </a>
+                                                                                </>
+                                                                            )
+                                                                        }
+                                                                    </div>
                                                                     <div className="car-list-card__top d-flex justify-content-between">
                                                                         <div>
                                                                             <h4 className='text-black'>{e?.name}</h4>

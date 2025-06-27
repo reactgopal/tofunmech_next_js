@@ -1,14 +1,15 @@
 'use client'
 
-import { Add_To_cart_Login, SingleProductDetails } from "@/api/services/apiServices";
-import { addLoginCart, addProductDetails, addToCart } from "@/store/reducers/ProductSlice";
+import { Add_To_cart_Login, SingleProductDetails, WishListLoginDelete } from "@/api/services/apiServices";
+import { addLoginCart, addProductDetails, addToCart, addToWishlist, removeProductWishlist } from "@/store/reducers/ProductSlice";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { HiShoppingCart } from "react-icons/hi";
-import { BsHeart } from "react-icons/bs";
+import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { toast } from "react-toastify";
+import Breadcrumbs from "@/utils/Breadcrumbs";
 
 export default function ShopDetails() {
 
@@ -18,7 +19,7 @@ export default function ShopDetails() {
     const router = useRouter();
     const params = useParams();
     const dispatch = useDispatch();
-    const { add_Details, login_cart, addto_cart } = useSelector((state) => ({ ...state.products }));
+    const { add_Details, login_cart, addto_cart, add_wish } = useSelector((state) => ({ ...state.products }));
     const id = params.id;
     const PN = params.PN;
     console.log(user, "user is not login");
@@ -29,6 +30,29 @@ export default function ShopDetails() {
             }
         })
     }, [])
+    // wishlist
+    var wishListIdsArray = [];
+    add_wish.forEach(function (obj) {
+        console.log(obj, "obj")
+        wishListIdsArray.push(obj.product_id);
+    });
+    const handleWish = (id) => {
+        dispatch(addToWishlist({ product_id: id }));
+        WishListLoginDelete({ product_id: id }).then((res) => {
+            if (res.success) {
+                console.log(res, "res of wishlist of login delete")
+                // dispatch(addToWishlist(res.data))
+            }
+        });
+    };
+    const removeElement = (id) => {
+        dispatch(removeProductWishlist(id));
+        WishListLoginDelete({ product_id: id }).then((res) => {
+            // console.log(res);
+        });
+    };
+
+    // add to cart
     var productIdsArray = [];
     addto_cart.forEach(function (obj) {
         productIdsArray.push(obj.part_no);
@@ -107,7 +131,9 @@ export default function ShopDetails() {
                 <section className="shop-details__main_area ">
                     <div className="container">
                         <div className="row">
-
+                            <span className="text-black">
+                                <Breadcrumbs />
+                            </span>
                             <div className="col-lg-6">
                                 <div className="container-banner-activities">
                                     <div className=" border rounded-3 overflow-hidden">
@@ -226,8 +252,29 @@ export default function ShopDetails() {
                                             </button>
                                         </div>
                                         <div className="shop-details-meta-right">
-                                            <BsHeart />
-                                            <span className="ms-2">Add to wishlist</span>
+                                            {
+                                                user?.success === true ? (
+                                                    wishListIdsArray.includes(add_Details?.id) ? (
+                                                        <button className="shop-details__add_to_wishlist" onClick={() => removeElement(add_Details?.id)}
+                                                        >
+                                                            <BsHeartFill />
+                                                            <span className="ms-2">Added to wishlist</span>
+                                                        </button>
+                                                    ) : (
+                                                        <button className="shop-details__add_to_wishlist" onClick={() => handleWish(add_Details?.id)}>
+                                                            <BsHeart />
+                                                            <span className="ms-2">Add to wishlist</span>
+                                                        </button>
+                                                    )
+                                                ) : (
+                                                    <button className="shop-details__add_to_wishlist">
+                                                        <BsHeart />
+                                                        <span className="ms-2">Add to wishlist</span>
+                                                    </button>
+                                                )
+                                            }
+                                            {/* <BsHeart />
+                                            <span className="ms-2">Add to wishlist</span> */}
                                         </div>
                                     </div>
                                     <div className="shop-details__description">
