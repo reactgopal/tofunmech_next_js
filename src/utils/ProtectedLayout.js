@@ -8,7 +8,7 @@ export default function ProtectedLayout({ children }) {
     const [loading, setLoading] = useState(true);
 
     // Only protect these routes
-    const protectedRoutes = ['/wishlist', '/checkout', '/review', '/my-orders'];
+    const protectedRoutes = ['/wishlist', '/checkout', '/review', '/my-orders','/my-address','/my-estimates'];
 
     useEffect(() => {
         const token = localStorage.getItem('USER');

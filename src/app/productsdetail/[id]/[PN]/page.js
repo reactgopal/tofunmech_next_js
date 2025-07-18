@@ -1,15 +1,17 @@
 'use client'
 
-import { Add_To_cart_Login, SingleProductDetails, WishListLoginDelete } from "@/api/services/apiServices";
-import { addLoginCart, addProductDetails, addToCart, addToWishlist, removeProductWishlist } from "@/store/reducers/ProductSlice";
+import { Add_To_cart_Login, CartList, SingleProductDetails, WishListLoginDelete } from "@/api/services/apiServices";
+import { addLoginCart, addProductDetails, addToCart, addToWishlist, removeProductWishlist, updateCartCount } from "@/store/reducers/ProductSlice";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { HiShoppingCart } from "react-icons/hi";
 import { BsHeart, BsHeartFill } from "react-icons/bs";
 import { toast } from "react-toastify";
 import Breadcrumbs from "@/utils/Breadcrumbs";
+import { AiFillStar, AiOutlineStar } from "react-icons/ai";
+import { MessageCircle, Star, ThumbsUp, TrendingUp, User } from "lucide-react";
 
 export default function ShopDetails() {
 
@@ -22,6 +24,14 @@ export default function ShopDetails() {
     const { add_Details, login_cart, addto_cart, add_wish } = useSelector((state) => ({ ...state.products }));
     const id = params.id;
     const PN = params.PN;
+
+    // review
+    const [reviewOpen, setReviewOpen] = useState(true);
+    const [addOpen, setAddOpen] = useState(true);
+    const [rating, setRating] = useState(0);
+    const [reviewText, setReviewText] = useState("");
+    const [helpfulClicks, setHelpfulClicks] = useState({});
+
     console.log(user, "user is not login");
     useEffect(() => {
         SingleProductDetails(id, PN).then((res) => {
@@ -60,11 +70,7 @@ export default function ShopDetails() {
 
     var productLoginIdsArray = [];
 
-    // login_cart.forEach(function (obj) {
-    //     productLoginIdsArray.push(obj?.product?.pn);
-    // });
-    console.log(login_cart, "login_cart")
-    Object.values(login_cart).forEach(function (obj) {
+    login_cart.forEach(function (obj) {
         productLoginIdsArray.push(obj?.product?.pn);
     });
 
@@ -101,29 +107,98 @@ export default function ShopDetails() {
             let data = {
                 product_id: add_Details?.id,
                 price: add_Details?.temp_price,
-                // name: add_Details?.name,
-                // image: add_details?.images[0].image,
-                // image: add_Details?.image,
-                part_no: add_Details?.PN,
                 qty: 1,
             }
-            console.log(data)
-
             Add_To_cart_Login(data).then((res) => {
-                console.log(res, "res");
                 if (res.success && res.data) {
-                    toast.success(res.message, "res.success");
-                    console.log(res.data, "res.success");
-                    // dispatch(addLoginCart([{ ...res.data, image: add_Details?.image, name: add_Details?.name }]));
-                    // dispatch(addLoginCart([{ ...res.data }]));
-                    dispatch(addLoginCart([{ ...res.data }]))
-                    // dispatch(addLoginCart([{ ...res.data, product: add_Details }]))
+                    console.log(res, "res add to cart login");
+                    const isAlreadyInCart = login_cart.some(item => item.product_id === res.data.product_id);
+                    if (isAlreadyInCart) {
+                        toast.warning("Product is already in the cart"); // ✅ Show toast if already exists
+                    } else {
+                        console.log(res.data, "res.success______-----0-08-00");
+                        toast.success("Product added to cart successfully!");
 
+                        // Fetch latest cart items from server
+                        CartList().then((res) => {
+                            if (res.success) {
+                                dispatch(addLoginCart(res?.data));
+                                // dispatch(updateCartCount()); // ✅ update header count
+                            }
+                        });
+                    }
                 }
-                // toast.success("Added to cart");
             })
         }
     }
+
+    const handleBuyNow = () => {
+        console.log("handleBuyNow");
+        if (user?.success !== true) {
+            const productExists = addto_cart.some((item) => item.proId === add_Details?.id);
+            if (productExists) {
+                router.push('/cart');
+            } else {
+                let data = {
+                    proId: add_Details?.id,
+                    price: add_Details?.temp_price,
+                    // price: add_Details?.price,
+                    qty: 1,
+                    name: add_Details?.name,
+                    // image: add_Details?.images[0].image,
+                    part_no: add_Details?.PN
+                }
+                dispatch(addToCart(data));
+            }
+        } else {
+            let data = {
+                product_id: add_Details?.id,
+                // price: add_Details?.price,
+                price: add_Details?.temp_price,
+                qty: 1,
+                part_no: add_Details?.PN
+            }
+            Add_To_cart_Login(data).then((res) => {
+                router.push('/checkout');
+            })
+        }
+    }
+    // review
+    const handleReviewClick = () => {
+        reviewOpen ? setAddOpen(false) : setReviewOpen(true);
+    };
+
+    const handleAddClick = () => {
+        reviewOpen ? setReviewOpen(false) : setAddOpen(true);
+    };
+    const ratingDistribution = [1, 2, 3, 4, 5].map((star) => {
+        const count = add_Details?.reviews?.filter((r) => r.rating === star).length || 0;
+        const percentage = add_Details?.reviews?.length
+            ? (count / add_Details.reviews.length) * 100
+            : 0;
+        return { star, count, percentage };
+    });
+    const renderStars = (rating = 0) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                i <= rating ? (
+                    <AiFillStar key={i} className="text-yellow-400" />
+                ) : (
+                    <AiOutlineStar key={i} className="text-yellow-400" />
+                )
+            );
+        }
+        return <div className="flex gap-1">{stars}</div>;
+    };
+    const toggleHelpful = (reviewId) => {
+        setHelpfulClicks((prev) => ({
+            ...prev,
+            [reviewId]: !prev[reviewId],
+        }));
+    };
+
+    console.log(login_cart, "login cart");
     console.log(add_Details, "add_Details");
     return (
         <div className="shop-details">
@@ -242,14 +317,50 @@ export default function ShopDetails() {
                                                     )}
                                                 </>
                                             )}
-                                            {/* <button className="shop-details__add_to_cart" onClick={handleAddToCart}>
-                                                <span className="shop-details__add_to_cart_icon"></span>
-                                                Add to cart
-                                            </button> */}
-                                            <button className="shop-details__buy_now" >
+                                            {/* {
+                                                add_Details?.out_of_stock == 1 && (
+                                                    <> */}
+                                            {
+                                                user?.success !== true ? (
+                                                    <>
+                                                        {productIdsArray.includes(id) ? (
+                                                            <Link href="/checkout">
+                                                                <button className="shop-details__buy_now" >
+                                                                    <span className="shop-details__buy_now_icon"></span>
+                                                                    Buy Now
+                                                                </button>
+                                                            </Link>
+                                                        ) : (
+                                                            <button className="shop-details__buy_now" onClick={() => handleBuyNow()}>
+                                                                <span className="shop-details__buy_now_icon"></span>
+                                                                Buy Now
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        {
+                                                            productLoginIdsArray.includes(id) ? (
+                                                                <Link href="/checkout">
+                                                                    <button className="shop-details__buy_now" >
+                                                                        <span className="shop-details__buy_now_icon"></span>
+                                                                        Buy Now
+                                                                    </button>
+                                                                </Link>
+                                                            ) : (
+                                                                <button className="shop-details__buy_now" onClick={() => handleBuyNow()}>
+                                                                    <span className="shop-details__buy_now_icon"></span>
+                                                                    Buy Now
+                                                                </button>
+                                                            )
+                                                        }
+                                                    </>
+                                                )
+                                            }
+                                            {/* <button className="shop-details__buy_now" >
                                                 <span className="shop-details__buy_now_icon"></span>
                                                 Buy Now
-                                            </button>
+                                            </button> */}
                                         </div>
                                         <div className="shop-details-meta-right">
                                             {
@@ -283,9 +394,405 @@ export default function ShopDetails() {
                                     </div>
                                 </div>
                             </div>
-                        </div >
+                        </div>
                     </div>
                 </section>
+
+                {/* Start product details tab Start section */}
+                <section className="product__details--tab__section section--padding">
+                    <div className="container">
+                        {/* <div className="row row-cols-1">
+                            <div className="col">
+                                <ul className="product__tab--one product__details--tab d-flex mb-30">
+                                    <li
+                                        className={`product__details--tab__list ${reviewOpen === true ? "active" : ""}`}
+                                        onClick={handleReviewClick}
+                                    >
+                                        Product Reviews
+                                    </li>
+                                    <li
+                                        className={`product__details--tab__list ${reviewOpen === true ? "" : "active"}`}
+                                        onClick={handleAddClick}
+                                    >
+                                        Additional Info
+                                    </li>
+                                </ul>
+                                <div className="product__details--tab__inner border-radius-10">
+                                    <div className="tab_content">
+                                        {
+                                            reviewOpen ?
+                                                <>
+                                                    <div className="product__reviews">
+                                                        <div className="product__reviews--header">
+                                                            <h2 className="product__reviews--header__title h3 mb-20">
+                                                                Customer Reviews
+                                                            </h2>
+                                                        </div>
+                                                        <div className="reviews__comment--area">
+                                                            {
+                                                                add_Details?.reviews?.length === 0 ? (
+                                                                    <div className="reviews__comment--list d-flex">
+                                                                        <div className="reviews__comment--thumb">
+                                                                            <img
+                                                                                src="assets/img/other/comment-thumb1.webp"
+                                                                                alt="comment-thumb"
+                                                                            />
+                                                                        </div>
+                                                                        <div className="reviews__comment--content">
+                                                                            <div className="reviews__comment--top d-flex justify-content-between">
+                                                                                <div className="reviews__comment--top__left">
+                                                                                    <h3 className="reviews__comment--content__title h4">
+                                                                                        Rino Shah
+                                                                                    </h3>
+                                                                                    <ul className="rating d-flex">
+                                                                                        <li className="rating__list">
+                                                                                            <span className="rating__icon">
+                                                                                                <AiFillStar />
+                                                                                                <AiFillStar />
+                                                                                                <AiFillStar />
+                                                                                                <AiFillStar />
+                                                                                                <AiFillStar />
+                                                                                            </span>
+                                                                                        </li>
+                                                                                    </ul>
+                                                                                </div>
+                                                                                <span className="reviews__comment--content__date">
+                                                                                    13/02/2023
+                                                                                </span>
+                                                                            </div>
+                                                                            <p className="reviews__comment--content__desc">
+                                                                                Good Products
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                ) :
+                                                                    (add_Details?.reviews?.map((e, index) => {
+                                                                        return (
+                                                                            <div className="reviews__comment--list d-flex" key={index}>
+                                                                                <div className="reviews__comment--thumb">
+                                                                                    <img
+                                                                                        src="assets/img/other/comment-thumb1.webp"
+                                                                                        alt="comment-thumb"
+                                                                                    />
+                                                                                </div>
+                                                                                <div className="reviews__comment--content">
+                                                                                    <div className="reviews__comment--top d-flex justify-content-between">
+                                                                                        <div className="reviews__comment--top__left">
+                                                                                            <h3 className="reviews__comment--content__title h4">
+                                                                                                {e?.user?.name ? e?.user?.name : 'Rino Shah'}
+                                                                                            </h3>
+                                                                                            <ul className="rating d-flex">
+                                                                                                <li className="rating__list">
+                                                                                                    <span className="rating__icon">
+                                                                                                        {
+                                                                                                            e?.rating === 0 &&
+                                                                                                            <>
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                        {
+                                                                                                            e?.rating === 1 &&
+                                                                                                            <>
+                                                                                                                <AiFillStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                        {
+                                                                                                            e?.rating === 2 &&
+                                                                                                            <>
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                        {
+                                                                                                            e?.rating === 3 &&
+                                                                                                            <>
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                        {
+                                                                                                            e?.rating === 4 &&
+                                                                                                            <>
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiOutlineStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                        {
+                                                                                                            e?.rating === 5 &&
+                                                                                                            <>
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                                <AiFillStar />
+                                                                                                            </>
+                                                                                                        }
+                                                                                                    </span>
+                                                                                                </li>
+                                                                                            </ul>
+                                                                                        </div>
+                                                                                        <span className="reviews__comment--content__date">
+                                                                                            {new Date(e?.updated_at).toLocaleDateString()}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <p className="reviews__comment--content__desc">
+                                                                                        {e?.text}
+                                                                                    </p>
+                                                                                </div>
+                                                                            </div>
+                                                                        )
+                                                                    }))
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                </> :
+                                                <>
+                                                    <div className="product__tab--content">
+                                                        <div className="product__tab--content__step">
+                                                            <ul className="additional__info_list">
+                                                                <li className="additional__info_list--item">
+                                                                    <span className="info__list--item-head">
+                                                                        <strong>Part Number</strong>
+                                                                    </span>
+                                                                    <span className="info__list--item-content">
+                                                                        {add_Details?.pn}
+                                                                    </span>
+                                                                </li>
+                                                                <li className="additional__info_list--item">
+                                                                    <span className="info__list--item-head">
+                                                                        <strong>Manufacturer</strong>
+                                                                    </span>
+                                                                    <span className="info__list--item-content">{add_Details?.manufacturer}Honda</span>
+                                                                </li>
+                                                                <li className="additional__info_list--item">
+                                                                    <span className="info__list--item-head">
+                                                                        <strong>Guarantee</strong>
+                                                                    </span>
+                                                                    <span className="info__list--item-content">
+                                                                        5 years
+                                                                    </span>
+                                                                </li>
+                                                                <li className="additional__info_list--item">
+                                                                    <span className="info__list--item-head">
+                                                                        <strong>Battery</strong>
+                                                                    </span>
+                                                                    <span className="info__list--item-content">
+                                                                        10000 mAh
+                                                                    </span>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div> */}
+                        <div className="row row-cols-1 product__tab_area">
+                            <div className="col">
+                                <ul className="product__tab--one product__details--tab d-flex mb-30">
+                                    <li
+                                        className={`product__details--tab__list ${reviewOpen ? "active" : ""}`}
+                                        onClick={handleReviewClick}
+                                    >
+                                        Product Reviews
+                                    </li>
+                                    <li
+                                        className={`product__details--tab__list ${!reviewOpen ? "active" : ""}`}
+                                        onClick={handleAddClick}
+                                    >
+                                        Additional Info
+                                    </li>
+                                </ul>
+
+                                <div className="product__details--tab__inner border-radius-10">
+                                    <div className="tab_content">
+                                        {reviewOpen ? (
+                                            <div className="review__section">
+                                                <div className="review__header">
+                                                    <h2 className="review__title">What Our Customers Say</h2>
+                                                    <p className="review__subtitle">Real feedback from verified buyers</p>
+                                                </div>
+
+                                                {/* Summary */}
+                                                <div className="review__summary grid md:grid-cols-3 gap-6">
+                                                    <div className="review__card review__rating">
+                                                        {/* <div className="review__score">{productRating.toFixed(1)}</div> */}
+                                                        <div className="review__score">5.0</div>
+                                                        {/* {renderStars(Math.floor(productRating), 'lg')} */}
+                                                        {/* <p className="review__base">Based on {totalReviews} reviews</p> */}
+                                                        <p className="review__base">Based on 50 reviews</p>
+                                                        <div className="review__status">
+                                                            <TrendingUp className="review__status--icon" />
+                                                            <span>Excellent Rating</span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Rating Breakdown */}
+                                                    <div className="review__card review__breakdown md:col-span-2">
+                                                        <h4 className="review__breakdown--title">Rating Breakdown</h4>
+                                                        {add_Details?.reviews?.map(({ star, count, percentage }) => (
+                                                            <div key={star} className="review__bar">
+                                                                <div className="review__bar--label">
+                                                                    {star} <Star className="review__bar--star" />
+                                                                </div>
+                                                                {/* <Progress value={percentage} className="review__bar--progress" /> */}
+                                                                <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                                                                    <div
+                                                                        className="bg-yellow-500 h-2.5 rounded-full"
+                                                                        style={{ width: `${percentage}%` }}
+                                                                    ></div>
+                                                                </div>
+
+                                                                <div className="review__bar--count">{count}</div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+
+                                                {/* Review Stats */}
+                                                <div className="review__stats grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                    <div className="review__stat review__stat--recommend border-green-200">
+                                                        <div className="review__scrore_text">{Math.round((add_Details?.reviews?.filter(r => r.rating >= 1).length / add_Details?.reviews?.length) * 100)}%</div>
+                                                        <p className="text-[14px] font-semibold text-gray-600 font-medium">Recommend this</p>
+                                                    </div>
+                                                    <div className="review__stat review__stat--verified border-blue-200">
+                                                        {/* <div className="review__scrore_text">{add_Details?.reviews?.filter(r => r.verified).length}</div> */}
+                                                        <div className="review__scrore_text">4</div>
+                                                        <p className="text-[14px] font-semibold text-gray-600 font-medium">Verified buyers</p>
+                                                    </div>
+                                                    <div className="review__stat review__stat--helpful border-purple-200">
+                                                        {/* <div className="review__scrore_text">{(add_Details?.reviews?.reduce((sum, r) => sum + r.helpful, 0) / add_Details?.reviews?.length).toFixed(1)}</div> */}
+                                                        <div className="review__scrore_text">9.4</div>
+                                                        <p className="text-[14px] font-semibold text-gray-600 font-medium">Avg. helpful votes</p>
+                                                    </div>
+                                                    <div className="review__stat review__stat--total border-orange-200">
+                                                        <div className="review__scrore_text">{add_Details?.reviews?.length}</div>
+                                                        <p className="text-[14px] font-semibold text-gray-600 font-medium">Total reviews</p>
+                                                    </div>
+                                                </div>
+                                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-8 mb-4">
+                                                    {/* Left: Icon + Title */}
+                                                    <div className="flex items-center gap-2">
+                                                        <MessageCircle className="w-[20px] h-[20px] text-gray-700" />
+                                                        <h2 className="text-lg font-semibold text-gray-900">Customer Reviews</h2>
+                                                    </div>
+
+                                                    {/* Right: Filter Button */}
+                                                    <div className="px-3 py-1 border border-blue-300 text-[12px] text-blue-600 font-semibold rounded-full bg-blue-50 w-fit">
+                                                        Most Recent
+                                                    </div>
+                                                </div>
+
+
+
+                                                {/* Review List */}
+                                                <div className="review__list">
+                                                    {add_Details?.reviews?.map((review, i) => (
+                                                        <div className="review__item" key={i}>
+                                                            <div className="review__avatar">
+                                                                <User />
+                                                            </div>
+                                                            <div className="review__content">
+                                                                <div className="review__meta">
+                                                                    <div className="d-flex align-items-center">
+                                                                        <h3>{review.user?.name || 'Anonymous'}</h3>
+                                                                        {/* {review.verified && <span className="review__verified">Verified Purchase</span>} */}
+                                                                        <span className="review__verified   ">Verified Purchase</span>
+                                                                    </div>
+
+                                                                    <span className="review__date">{new Date(review.updated_at).toLocaleDateString()}</span>
+                                                                </div>
+                                                                <div className="review__rating ">
+                                                                    {renderStars(review.rating)}
+                                                                </div>
+                                                                <p className="review__comment border border-gray-100">"{review.text}"</p>
+                                                                <div className="review__actions">
+                                                                    {/* <button
+                                                                        onClick={() => toggleHelpful(review.id)}
+                                                                        className={`review__helpful ${helpfulClicks[review.id] ? 'active' : ''}`}
+                                                                    >
+                                                                        <ThumbsUp /> Helpful ({review.helpful + (helpfulClicks[review.id] ? 1 : 0)})
+                                                                    </button> */}
+                                                                    <button
+                                                                        // onClick={() => toggleHelpful(review.id)}
+                                                                        className="review__helpful"
+                                                                    >
+                                                                        <ThumbsUp className="w-[14px] h-[14px]" /> Helpful (12)
+                                                                    </button>
+                                                                    <button className="review__reply">Reply</button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+
+                                                {/* Load More */}
+                                                {add_Details?.reviews?.length > 3 && (
+                                                    <div className="review__loadmore">
+                                                        <button onClick={() => setShowAllReviews(!showAllReviews)}>
+                                                            {showAllReviews ? 'Show Less Reviews' : `Load More Reviews (${add_Details.reviews.length - 3} more)`}
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {/* CTA */}
+                                                <div className="review__cta">
+                                                    <h4>Have you used this product?</h4>
+                                                    <p>Share your experience to help other customers</p>
+                                                    <button className="review__cta--button">Write a Review</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="product__tab--content">
+                                                <div className="product__tab--content__step">
+                                                    <ul className="additional__info_list">
+                                                        <li className="additional__info_list--item">
+                                                            <span className="info__list--item-head"><strong>Part Number</strong></span>
+                                                            <span className="info__list--item-content">{add_Details?.PN}</span>
+                                                        </li>
+                                                        <li className="additional__info_list--item">
+                                                            <span className="info__list--item-head"><strong>Remark</strong></span>
+                                                            <span className="info__list--item-content">{add_Details?.Remark}</span>
+                                                        </li>
+                                                        <li className="additional__info_list--item">
+                                                            <span className="info__list--item-head"><strong>Guarantee</strong></span>
+                                                            <span className="info__list--item-content">5 years</span>
+                                                        </li>
+                                                        <li className="additional__info_list--item">
+                                                            <span className="info__list--item-head"><strong>Battery</strong></span>
+                                                            <span className="info__list--item-content">10000 mAh</span>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {/* Start product details tab End section */}
+
             </div>
         </div>
     );

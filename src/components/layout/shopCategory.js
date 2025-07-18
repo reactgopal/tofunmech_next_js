@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addCategory } from "@/store/reducers/ProductSlice";
 
-import { color, motion } from "framer-motion";
+import {  motion } from "framer-motion";
 
 export default function ShopCategory() {
     const router = useRouter();
@@ -67,7 +67,7 @@ export default function ShopCategory() {
 
                     <div className="category-grid">
                         {displayedCategory?.map((e, i) => (
-                            <div className="category-card" key={i}>
+                            <motion.div className="category-card" key={i}>
                                 <a
                                     onClick={(event) => {
                                         event.preventDefault();
@@ -86,7 +86,7 @@ export default function ShopCategory() {
                                             </div> */}
                                     </div>
                                 </a>
-                            </div>
+                            </motion.div>
                         ))}
 
                     </div>

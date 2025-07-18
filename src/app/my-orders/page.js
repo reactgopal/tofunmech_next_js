@@ -4,6 +4,7 @@ import { AddOrderList } from "@/api/services/apiServices";
 import { addOrderDetails } from "@/store/reducers/ProductSlice";
 import Invoice from "@/utils/Invoice";
 import { BlobProvider } from "@react-pdf/renderer";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -25,9 +26,8 @@ export default function MyOrders() {
     }, []);
     return (
         <div>
-            <section className="order-history section-padding">
+            <section className="order-history">
                 <div className="container">
-
                     <div className="order-filters">
                         {/* <h2 className="order-history-title h2">Your Orders</h2> */}
                     </div>
@@ -63,9 +63,11 @@ export default function MyOrders() {
                                                                         </div>
                                                                         {/* Review Button */}
                                                                         <div className="order-footer mt-auto">
-                                                                            <button className="btn">
-                                                                                Write a product review
-                                                                            </button>
+                                                                            <Link href={`/customer/${product?.product_id}`}>
+                                                                                {/* <button className="btn"> */}
+                                                                                    Write a product review
+                                                                                {/* </button> */}
+                                                                            </Link>
                                                                         </div>
                                                                     </div>
                                                                 ))
@@ -91,38 +93,18 @@ export default function MyOrders() {
                                                             }}
                                                         </BlobProvider>
                                                     )}
-                                                    {/* <BlobProvider document={<Invoice order={order} />}>
-
-                                                        {({ url, loading, error }) => {
-                                                            if (loading) {
-                                                                return <span>Loading PDF...</span>;
-                                                            }
-                                                            if (error) {
-                                                                return <span>Error generating PDF</span>;
-                                                            }
-                                                            return (
-                                                                
-                                                                    Download Invoice
-                                                                </a>
-                                                            );
-                                                        }}
-                                                    </BlobProvider> */}
                                                 </div>
                                             </div>
                                         ))
                                     }
-
                                 </div>
                             </div>
-
                         ) : (
                             <p>No orders found</p>
                         )
                     }
-
                 </div>
             </section>
-
         </div>
     );
 }

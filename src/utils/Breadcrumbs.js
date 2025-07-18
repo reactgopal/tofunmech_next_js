@@ -109,7 +109,7 @@ const Breadcrumbs = () => {
         //         ))}
         //     </ol>
         // </nav>
-        <nav aria-label="breadcrumb" className="text-sm text-gray-600 my-4">
+        <nav aria-label="breadcrumb" className="text-md text-gray-600 my-4">
             <ul className="flex flex-wrap items-center space-x-1">
                 {crumbs.map((crumb, index) => (
                     <li key={index} className="flex items-center">

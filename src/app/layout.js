@@ -5,7 +5,7 @@ import "./globals.css";
 import 'swiper/css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
+import 'react-modern-drawer/dist/index.css'
 import ReduxProvider from './providers';
 
 import ClientLayout from "@/components/ClientLayout";

@@ -1,8 +1,7 @@
 'use client'
-import { BlobProvider, PDFDownloadLink } from '@react-pdf/renderer';
-import EstimateInvoice from '@/utils/EstimateInvoice';
-import { AiOutlineClose } from "react-icons/ai";
+
 import { useDispatch, useSelector } from "react-redux";
+import { AiOutlineClose } from "react-icons/ai";
 import {
     removeLoginAddtocart,
     removeProductAddtocart,
@@ -11,39 +10,51 @@ import {
     addLoginCart,
     qtyIncrementDecrement
 } from "@/store/reducers/ProductSlice";
+import React, { useEffect, useState } from 'react';
 import { Add_To_cart_Login, CartList, CartLoginDelete, EstimateOrders } from "@/api/services/apiServices";
 import { useRouter } from "next/navigation";
-
 import { toast } from "react-toastify";
-import Link from 'next/link';
-import { useEffect, useMemo } from 'react';
+import InvoiceWrapper from "@/components/pdf/InvoiceWrapper";
+
+import { motion, AnimatePresence } from 'framer-motion';
+
+
 export default function Cart() {
     const router = useRouter();
     const dispatch = useDispatch();
-    const user = useMemo(() => {
-        if (typeof window !== 'undefined') {
-            return JSON.parse(localStorage.getItem('USER'));
-        }
-        return null;
-    }, []);
-    console.log(user)
-
     // const user = JSON.parse(localStorage.getItem("USER"));
+    const [user, setUser] = useState(null);
     const { addto_cart, login_cart } = useSelector((state) => ({ ...state.products }));
-    const countTotal = (items) => items.reduce((acc, curr) => acc + curr.qty * curr.price, 0);
+
+    const countTotal = (items) =>
+        items.reduce((acc, curr) => acc + curr.qty * parseFloat(curr.price || 0), 0);
+
+    // const countTotal = (items) => items.reduce((acc, curr) => acc + curr.qty * curr.price, 0);
+
+    console.log(login_cart, "login_cart")
+
 
     const handleCheckout = () => {
         router.push('/checkout');
     };
     useEffect(() => {
+        const localUser = JSON.parse(localStorage.getItem("USER"));
+        setUser(localUser);
+    }, []);
+
+    useEffect(() => {
         if (!login_cart || login_cart.length === 0) {  // ✅ Fetch only if empty
             CartList().then((res) => {
+                console.log(res, "res of cart list-------------------------------");
                 if (res.success) {
                     dispatch(addLoginCart(res?.data));
                 }
             }).catch(error => console.error("Error fetching cart:", error));
         }
     }, []);
+
+
+
     const handleInc = (id) => {
         dispatch(qtyIncrementDecrement({ id, plusMinus: + 1 }))
         toast.success("Quantity updated successfully.")
@@ -58,7 +69,6 @@ export default function Cart() {
         toast.success('Products Remove From Cart.');
     };
     const removeLoginElement = (id) => {
-        console.log(id, "id")
         CartLoginDelete(id).then((res) => {
             console.log(res, "res of remove login element");
             if (res?.success) {
@@ -96,14 +106,14 @@ export default function Cart() {
             }
         });
     }
-    // const calculateTotal = () => {
-    //     return cartItems.reduce((total, item) => {
-    //         const finalPrice = item?.discount || item?.price;
-    //         return total + finalPrice * item?.quantity;
-    //     }, 0).toFixed(2);
-    // };
+    const calculateTotal = () => {
+        return cartItems.reduce((total, item) => {
+            const finalPrice = item?.discount || item?.price;
+            return total + finalPrice * item?.quantity;
+        }, 0).toFixed(2);
+    };
     const createEstimate = (e) => {
-        // e.preventDefault(); // Prevent the default navigation
+        e.preventDefault(); // Prevent the default navigation
 
         if (!user?.success) {
             router.push('/login'); // Redirect to login if user is not logged in
@@ -113,7 +123,6 @@ export default function Cart() {
                 if (res.success) {
                     toast.success(res.message);
                 } else {
-                    console.log("sdfasdfafds")
                     // router.push('/my-estimates');
                     router.push('/cart');
                 }
@@ -129,161 +138,195 @@ export default function Cart() {
                         addto_cart?.length > 0 || login_cart?.length > 0 ?
                             (<>
                                 <table className="table align-middle text-center">
-                                    <thead className="table-light">
-                                        <tr>
-                                            <th scope="col">PRODUCT</th>
-                                            <th scope="col">PRICE</th>
-                                            <th scope="col">QUANTITY</th>
-                                            <th scope="col">TOTAL</th>
+                                    <thead className="table-light h2">
+                                        <tr className="my-2">
+                                            <th scope="col">Product</th>
+                                            <th scope="col">Price</th>
+                                            <th scope="col">Quantity</th>
+                                            <th scope="col">Total</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {user?.success !== true ? (
                                             <>
-                                                {addto_cart?.map((item, index) => {
-                                                    return (
-                                                        <tr key={index}>
-                                                            <td className="text-start d-flex align-items-center gap-3" >
-                                                                <button
-                                                                    className="wishlist_remove"
-                                                                    onClick={() => removeElement(item?.proId)}
+                                                <AnimatePresence >
 
-                                                                >
-                                                                    <AiOutlineClose size={18} />
-                                                                </button>
+                                                    {addto_cart?.map((item, index) => {
+                                                        return (
+                                                            <motion.tr
+                                                                key={index}
+                                                                initial={{ opacity: 0, y: 20 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{
+                                                                    opacity: 0, x: -100
+                                                                }}
+                                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
 
-                                                                <img
-                                                                    src={item?.product?.image || "asdlfjs;dl"}
+                                                                layout
+                                                            >
+                                                                <td className="text-start d-flex align-items-center gap-3" >
+                                                                    <button
+                                                                        className="wishlist_remove"
+                                                                        onClick={() => removeElement(item?.proId)}
 
-                                                                    alt="product"
-                                                                    width={70}
-                                                                    height={70}
-                                                                    style={{ width: "90px", height: "auto", borderRadius: "5px" }}
-                                                                />
-                                                                <div>
-                                                                    <div className="fw-semibold">{item?.name}</div>
-                                                                    <small className="text-muted">{item?.description}</small>
-                                                                </div>
-                                                            </td>
+                                                                    >
+                                                                        <AiOutlineClose size={18} />
+                                                                    </button>
 
-                                                            <td>
-                                                                {item?.discount ? (
-                                                                    <>
-                                                                        <span className="text-decoration-line-through text-muted me-2">
-                                                                            ₹{item?.price.toFixed(2)}
-                                                                        </span>
-                                                                        <span className="fw-bold text-success">
-                                                                            ₹{item?.discount.toFixed(2)}
-                                                                        </span>
-                                                                    </>
-                                                                ) : (
-                                                                    <span className="fw-bold">₹{item?.price}</span>
-                                                                )}
-                                                            </td>
-                                                            <td>
-                                                                <div className="quantity__box justify-content-center">
-                                                                    <button className="quantity__value decrease"
-                                                                        onClick={() => handleDec(
-                                                                            item?.product_id,
-                                                                            item?.qty - 1,
-                                                                            item?.price
-                                                                        )}
-                                                                    >-</button>
-                                                                    <h5 className="ms-3 me-3 mt-2">{item?.qty}</h5>
-                                                                    <button className="quantity__value increase"
-                                                                        onClick={() => handleInc(
-                                                                            item?.product_id,
-                                                                            item?.qty + 1,
-                                                                            item?.price
-                                                                        )}>+</button>
-                                                                </div>
-                                                            </td>
+                                                                    <img
+                                                                        alt="product"
+                                                                        width={70}
+                                                                        height={70}
+                                                                        style={{ width: "90px", height: "auto", borderRadius: "5px" }}
+                                                                    />
+                                                                    <div>
+                                                                    </div>
+                                                                </td>
 
-                                                            <td>
-                                                                <span className="fw-bold text-success">
-                                                                    ₹ {(item?.discount || item?.price) * item?.qty}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    )
+                                                                <td>
+                                                                    {item?.discount ? (
+                                                                        <>
+                                                                            <span className="text-decoration-line-through text-muted me-2">
+                                                                                ₹{item?.price.toFixed(2)}
+                                                                            </span>
+                                                                            <span className="fw-bold text-success">
+                                                                                ₹{item?.discount.toFixed(2)}
+                                                                            </span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="fw-bold">₹{item?.price}</span>
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="quantity__box justify-content-center">
+                                                                        <button className="quantity__value decrease"
+                                                                            onClick={() => handleDec(
+                                                                                item?.product_id,
+                                                                                item?.qty - 1,
+                                                                                item?.price
+                                                                            )}
+                                                                        >-</button>
+                                                                        <h5
+                                                                            className="ms-3 me-3 mt-2">{item?.qty}
+                                                                        </h5>
+                                                                        <button className="quantity__value increase"
+                                                                            onClick={() => handleInc(
+                                                                                item?.product_id,
+                                                                                item?.qty + 1,
+                                                                                item?.price
+                                                                            )}>+</button>
+                                                                    </div>
+                                                                </td>
 
-                                                })}
+                                                                <td>
+                                                                    <span className="fw-bold text-success">
+                                                                        ₹ {parseFloat(item?.discount || item?.price) * item?.qty}
+
+                                                                    </span>
+                                                                </td>
+                                                            </motion.tr>
+                                                        )
+
+                                                    })}
+                                                </AnimatePresence>
+
                                             </>
                                         ) : (
                                             <>
-                                                {login_cart?.map((item, index) => {
-                                                    return (
-                                                        <tr key={index}>
-                                                            {/* Product Name + ImaFge + Remove */}
-                                                            <td className="text-start d-flex align-items-center gap-3" >
-                                                                <button
-                                                                    className="wishlist_remove"
-                                                                    onClick={() => removeLoginElement(item?.id)}
+                                                <AnimatePresence >
 
-                                                                >
-                                                                    <AiOutlineClose size={18} />
-                                                                </button>
-                                                                <img
-                                                                    src={item?.product?.image}
-                                                                    alt="product"
-                                                                    width={70}
-                                                                    height={70}
-                                                                    style={{ width: "90px", height: "auto", borderRadius: "5px" }}
-                                                                />
-                                                                <div>
-                                                                    <div className="fw-semibold">{item?.product?.name}</div>
-                                                                    <small className="text-muted">{item?.product?.Description}</small>
-                                                                </div>
-                                                            </td>
+                                                    {login_cart?.map((item, index) => {
+                                                        return (
+                                                            <motion.tr
+                                                                key={index}
+                                                                initial={{ opacity: 0, y: 20 }}
+                                                                animate={{ opacity: 1, y: 0 }}
+                                                                exit={{
+                                                                    opacity: 0, x: -100
+                                                                }}
+                                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
 
-                                                            {/* Price */}
-                                                            <td>
-                                                                {item?.discount ? (
-                                                                    <>
-                                                                        <span className="text-decoration-line-through text-muted me-2">
-                                                                            ₹{item?.price.toFixed(2)}
-                                                                        </span>
-                                                                        <span className="fw-bold text-success">
-                                                                            ₹{item?.discount.toFixed(2)}
-                                                                        </span>
-                                                                    </>
-                                                                ) : (
-                                                                    <span className="fw-bold">₹{item?.price}</span>
-                                                                )}
-                                                            </td>
+                                                                layout
+                                                            >
+                                                                <td className="text-start d-flex align-items-center gap-3" >
+                                                                    <motion.button
+                                                                        className="wishlist_remove"
+                                                                        onClick={() => removeLoginElement(item?.id)}
 
-                                                            {/* Quantity Controls */}
-                                                            <td>
-                                                                <div className="quantity__box justify-content-center">
-                                                                    <button className="quantity__value decrease"
-                                                                        onClick={() => handleLoginDec(
-                                                                            item?.product_id,
-                                                                            item?.qty - 1,
-                                                                            item?.price
-                                                                        )}
-                                                                    // disabled={item?.qty == 1 ? true : false}
-                                                                    >-</button>
-                                                                    <h5 className="ms-3 me-3 mt-2">{item?.qty}</h5>
-                                                                    <button className="quantity__value increase"
-                                                                        onClick={() => handleLoginInc(
-                                                                            item?.product_id,
-                                                                            item?.qty + 1,
-                                                                            item?.price
-                                                                        )}>+</button>
-                                                                </div>
-                                                            </td>
+                                                                    >
+                                                                        <AiOutlineClose size={18} />
+                                                                    </motion.button>
+                                                                    <img
+                                                                        src={item?.product?.image || "asdlfjs;dl"}
+                                                                        // src={item?.image || "asdlfjs;dl"}
+                                                                        alt="product"
+                                                                        width={70}
+                                                                        height={70}
+                                                                        style={{ width: "90px", height: "auto", borderRadius: "5px" }}
+                                                                    />
+                                                                    <div>
+                                                                        <div className="h3 ">
+                                                                            {item?.name}
+                                                                            {item?.name || item?.product?.name || "hello world"}
 
-                                                            {/* Action Button */}
-                                                            <td>
-                                                                <span className="fw-bold text-success">
-                                                                    ₹ {(item?.discount || item?.price) * item?.qty}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    )
-                                                })}
+                                                                        </div>
+                                                                        <small className="p">{item?.Description}</small>
+                                                                    </div>
+                                                                </td>
+
+                                                                <td>
+                                                                    {item?.discount ? (
+                                                                        <>
+                                                                            <span className="text-decoration-line-through text-muted me-2">
+                                                                                ₹{item?.price.toFixed(2)}
+                                                                            </span>
+                                                                            <span className="fw-bold text-success">
+                                                                                ₹{item?.discount.toFixed(2)}
+                                                                            </span>
+                                                                        </>
+                                                                    ) : (
+                                                                        <span className="fw-bold">₹{item?.price}</span>
+                                                                    )}
+                                                                </td>
+                                                                <td>
+                                                                    <div className="quantity__box justify-content-center">
+                                                                        <button className="quantity__value decrease"
+                                                                            onClick={() => handleLoginDec(
+                                                                                item?.product_id,
+                                                                                item?.qty - 1,
+                                                                                item?.price
+                                                                            )}
+                                                                            disabled={item?.qty == 1 ? true : false}
+                                                                        >-</button>
+                                                                        <h5
+                                                                            className="ms-3 me-3 mt-2">
+                                                                            {item?.qty}
+                                                                        </h5>
+                                                                        <button className="quantity__value increase"
+                                                                            onClick={() => handleLoginInc(
+                                                                                item?.product_id,
+                                                                                item?.qty + 1,
+                                                                                item?.price
+                                                                            )}>+</button>
+                                                                    </div>
+                                                                </td>
+
+                                                                {/* Action Button */}
+                                                                <td>
+                                                                    <span className="fw-bold text-success">
+                                                                        {/* ₹ {(item?.discount || item?.price) * item?.qty} */}
+                                                                        ₹ {parseFloat(item?.discount || item?.price) * item?.qty}
+
+                                                                    </span>
+                                                                </td>
+                                                            </motion.tr>
+                                                        )
+                                                    })}
+                                                </AnimatePresence>
+
                                             </>
-                                        )}
+                                        )
+                                        }
                                     </tbody>
                                     <tfoot>
                                         {
@@ -309,7 +352,7 @@ export default function Cart() {
                                                         <p>Estimated delivery costs:</p>
                                                         <p>Total:</p>
                                                     </td>
-                                                    <td className="text-center">
+                                                    <td className="text-center fw-bold">
                                                         <p>₹ {countTotal(login_cart).toLocaleString("en-IN")}/-</p>
                                                         <p>Free</p>
                                                         <p>₹ {(countTotal(login_cart)).toLocaleString("en-IN")}/-</p>
@@ -320,29 +363,69 @@ export default function Cart() {
                                 </table>
                                 <div className="d-flex justify-content-between">
                                     {/* <BlobProvider document={login_cart ? <EstimateInvoice order={login_cart} total={countTotal(login_cart)} /> : <></>}>
-                                        {({ blob, url, loading, error }) => (
-                                            <a
-                                                href={url}
-                                                target="_blank"
-                                                style={{
-                                                    backgroundColor: "var(--primary-color)",
-                                                    color: "white",
-                                                    border: "0",
-                                                    borderRadius: "5px",
-                                                    width: "200px",
-                                                    textAlign: "center",
-                                                    padding: "3px 20px"
-                                                }}
-                                                onClick={(e) => login_cart && createEstimate(e, url)}
+                                            {({ blob, url, loading, error }) => (
+                                                <a
+                                                    href={url}
+                                                    target="_blank"
+                                                    className='btn__view_estimate'
+                                                    onClick={(e) => login_cart && createEstimate(e, url)}
+                                                >
+                                                    View Estimates
+                                                </a>
+                                            )}
+                                        </BlobProvider> */}
+                                    {/* {Array.isArray(login_cart) && login_cart.length > 0 ? (
+                                            <BlobProvider
+                                                document={
+                                                    <EstimateInvoice
+                                                        order={login_cart}
+                                                        total={countTotal(login_cart)}
+                                                    />
+                                                }
                                             >
-                                                View Estimates
-                                            </a>
-                                        )}
-                                    </BlobProvider> */}
+                                                {({ url, loading }) =>
+                                                    !loading && (
+                                                        <a href={url} target="_blank" rel="noopener noreferrer" className='btn__view_estimate'>
+                                                            Download Estimate
+                                                        </a>
+                                                    )
+                                                }
+                                            </BlobProvider>
+                                        ) : (
+                                            <p>No estimate available</p>
+                                        )} */}
+                                    {/* <InvoiceWrapper order={login_cart} total={countTotal(login_cart)} /> */}
+                                    <form
+                                        method="POST"
+                                        action="/api/estimate"
+                                        target="_blank"
+                                        onSubmit={(e) => {
+                                            e.preventDefault();
+                                            const form = e.target;
+
+                                            fetch('/api/estimate', {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({ order: login_cart, total: countTotal(login_cart) }),
+                                            })
+                                                .then((res) => res.blob())
+                                                .then((blob) => {
+                                                    const url = window.URL.createObjectURL(blob);
+                                                    window.open(url, '_blank');
+                                                });
+                                        }}
+                                    >
+                                        <button type="submit" className="btn__view_estimate">
+                                            View Estimate
+                                        </button>
+                                    </form>
+
+
 
                                     <button className="btn__cart" onClick={handleCheckout}>Proceed to Checkout</button>
                                 </div>
-                            </>) :
+                            </>
+                            ) :
                             (<>
                                 <img
                                     style={{
