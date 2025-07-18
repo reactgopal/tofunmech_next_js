@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchCategories } from "@/store/reducers/categorySlice";
 import { findCategoryById, isValidCategoryPath } from "@/utils/helpers";
 
-import 'react-modern-drawer/dist/index.css'
+
 import Drawer from 'react-modern-drawer'
 import { motion } from "framer-motion";
 
@@ -36,7 +36,14 @@ const CatelogPage = () => {
     console.log(currentCategoryId, "currentCategoryId")
 
     const subCategory = findCategoryById(categories, currentCategoryId);
-    console.log(subCategory, "subCategoryf")
+    console.log(subCategory, "subCategory")
+
+    // text animation
+    const headLineText = "Shop By Categories";
+    const words = headLineText.split(" ");
+    const cateWord = "Categories";
+    const catewords = cateWord.split(" ");
+    console.log(words, "words")
 
     useEffect(() => {
         if (status === "idle") {
@@ -75,8 +82,8 @@ const CatelogPage = () => {
                     <div className="bg-overlay rounded-4 overflow-hidden">
                         <img src="/assets/img/pageHeader/banner1.png" alt="Carento" />
                     </div>
-                    <div className="container position-absolute z-1 top-50 start-50 pb-70 translate-middle text-center">
-                        <span className="shop-list-header__subtitle text-sm-bold rounded-4">Find cars for sale and for rent near you</span>
+                    <div className="container position-absolute z-1 top-50 start-50 `pb-[20px] translate-middle text-center">
+                        <span className="shop-list-header__subtitle text-sm-bold rounded-4 ">Find cars for sale and for rent near you</span>
                         <h2>
                             Find the Perfect Part at the
                             <br />
@@ -112,86 +119,93 @@ const CatelogPage = () => {
                 <div className="container">
                     <div className="box-content-main pt-4">
                         <div className="content-right">
-                            <div className="shop-list-toolbar">
+                            <div className="shop-list-toolbar p-0">
                                 <div className="row align-items-center">
                                     <div className="shop-list-toolbar__left col-xl-4 col-md-4 mb-10 text-lg-start text-center">
-                                        <div className="shop-list-toolbar__view-options">
-                                            {/* <a className="shop-list-toolbar__view-icon" href="/cars-list-4">View</a>
-                                            <a className="shop-list-toolbar__view-icon" href="/cars-list-4">View</a> */}
-                                            <button
-                                                // className={`product__grid--column__buttons--icons ${gridOpen == true ? "active" : ""
-                                                //     } `}
+                                        <div className="shop-list-toolbar__view-options section__heading">
+                                            <motion.div
+                                                className="shop-list-category__view-title"
+                                                style={{ marginLeft: "35px" }}
+                                            >
+                                                {
+                                                    words.map((word, index) => (
+                                                        <motion.h2
+                                                            initial={{ filter: "blur(5px)", opacity: 0, y: 12 }}
+                                                            animate={{ filter: "blur(0)", opacity: 1, y: 0 }}
+                                                            transition={{ duration: 0.5, delay: 0.1 * index }}
+                                                            key={index}
+                                                            className="shop-list-category__view-title me-1 ">
+                                                            {word}
+                                                        </motion.h2>
+                                                    ))
+                                                }
+                                            </motion.div>
+                                            <button className="btn d-block d-lg-none" onClick={toggleDrawer}>Filter</button>
+
+                                            {/* <button
                                                 className="shop-list-toolbar__view-icon"
                                                 aria-label="grid btn"
                                                 data-toggle="tab"
                                                 data-target="#product_grid"
-                                                // onClick={handleGridClick}
                                                 title="Grid"
                                             >
                                                 <CgMenuGridR style={{ color: "black" }} />
                                             </button>
                                             <button
-                                                // className={`product__grid--column__buttons--icons ${gridOpen == true ? "" : "active"
-                                                //     }`}
                                                 className="shop-list-toolbar__view-icon"
                                                 aria-label="list btn"
                                                 data-toggle="tab"
                                                 data-target="#product_list"
-                                                // onClick={handleTfiClick}
                                                 title="List"
                                             >
                                                 <TfiMenuAlt style={{ color: "black" }} />
-                                            </button>
-                                            <span className="shop-list-toolbar__result-count">64 items found</span>
-                                        </div>
-                                    </div>
-                                    <div className="shop-list-toolbar__right col-xl-8 col-md-8 mb-10 text-lg-end text-center">
-                                        <div className="shop-list-toolbar__controls">
-                                            <a className="shop-list-toolbar__sort-btn" href="#">
-                                                <svg width={18} height={18} viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8.25 6L5.25 3M5.25 3L2.25 6M5.25 3L5.25 15" stroke="#101010" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                    <path d="M9.75 12L12.75 15M12.75 15L15.75 12M12.75 15L12.75 3" stroke="#101010" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </a>
-
-                                            <div className="shop-list-toolbar__dropdown">
-                                                <span className="shop-list-toolbar__label">Show</span>
-                                                <div className="dropdown">
-                                                    <button className="btn dropdown-toggle" id="dropdownShow" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <span>20</span>
-                                                    </button>
-                                                    <ul className="dropdown-menu" aria-labelledby="dropdownShow">
-                                                        <li><a className="dropdown-item active" href="#">20</a></li>
-                                                        <li><a className="dropdown-item" href="#">30</a></li>
-                                                        <li><a className="dropdown-item" href="#">50</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-
-                                            <div className="shop-list-toolbar__dropdown">
-                                                <span className="shop-list-toolbar__label">Sort by:</span>
-                                                <div className="dropdown ">
-                                                    <button className="btn dropdown-toggle" id="dropdownSort" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <span>Most Viewed</span>
-                                                    </button>
-
-                                                    <ul className="dropdown-menu" aria-labelledby="dropdownSort">
-                                                        <li><a className="dropdown-item active" href="#">Most Viewed</a></li>
-                                                        <li><a className="dropdown-item" href="#">Recently search</a></li>
-                                                        <li><a className="dropdown-item" href="#">Most popular</a></li>
-                                                        <li><a className="dropdown-item" href="#">Top rated</a></li>
-                                                    </ul>
-                                                </div>
-                                                <button className="filter_btn d-block d-lg-none" onClick={toggleDrawer}>
-                                                    Filter
-                                                </button>
-                                            </div>
+                                            </button> */}
+                                            {/* <span className="shop-list-toolbar__result-count">64 items found</span> */}
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div className="shop-list-products">
                                 <div className="row">
+                                    {subCategory?.children?.length > 0 ? (
+                                        subCategory.children.map((item) => {
+                                            const newPath = `/catelog/${params.join("/")}/${item.id}`;
+                                            const cateLevel = params.length + 1;
+                                            const cateParam = cateLevel === 2 ? "cate2" : "cate3";
+
+                                            const handleClick = () => {
+                                                if (item.children?.length > 0) {
+                                                    router.push(newPath);
+                                                } else {
+                                                    router.push(`/shop/${item.name}?cate=${cateParam}`);
+                                                }
+                                            };
+
+                                            return (
+                                                <div key={item.id} className="col-lg-3 col-md-6">
+                                                    <div
+                                                        className="category-list-products__card"
+                                                        onClick={handleClick}
+                                                        style={{ cursor: "pointer" }}
+                                                    >
+                                                        <div className="category-products__image new_img_height">
+                                                            <img src={item.image} alt={item.name} />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="category-list-products__title">
+                                                                {item.name}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="mt-4 text-gray-600">No subcategories</p>
+                                    )}
+                                </div>
+
+                                {/* <div className="row">
                                     {subCategory?.children?.length > 0 ? (
                                         subCategory.children.map((item) => (
                                             <div key={item.id} className="col-lg-3 col-md-6">
@@ -224,149 +238,121 @@ const CatelogPage = () => {
                                     ) : (
                                         <p className="mt-4 text-gray-600">No subcategories</p>
                                     )}
-                                </div>
+                                </div> */}
                             </div>
                         </div>
                         {/* filter area code  */}
                         <div className="content-left order-lg-first d-none d-lg-block">
-                            <div className="shop-list-filter-categories">
+                            <div className="shop-list-filter-categories m-0 shop__sidebar--widget">
                                 <div className="shop-list-filter-categories__wrapper">
                                     <div className="shop-list-filter-categories__block">
-                                        <h6 className="shop-list-filter-categories__title">Categories</h6>
+                                        <motion.div className="shop-list-filter-categories__title">
+                                            {
+                                                catewords.map((word, index) => (
+                                                    <motion.h6
+                                                        initial={{ filter: "blur(5px)", opacity: 0, y: 12 }}
+                                                        animate={{ filter: "blur(0)", opacity: 1, y: 0 }}
+                                                        transition={{ duration: 0.5, delay: 0.1 * index }}
+                                                        key={index}
+                                                        className="shop-list-filter-categories__title me-1 ">
+                                                        {word}
+                                                    </motion.h6>
+                                                ))
+                                            }
+                                        </motion.div>
+                                        <hr />
                                         <div className="shop-list-filter-categories__collapse">
                                             <ul className="shop-list-filter-categories__checkbox-list" style={{ maxHeight: "600px", overflowY: "auto" }}>
-                                                {categories?.map((category) => (
-                                                    <motion.div
-                                                        key={category.id}
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                        className="mb-2 shadow-sm rounded-lg bg-white"
-                                                    >
+                                                {/* {categories?.map((category) => (
+                                                    <div key={category.id} className="sidebar-category">
                                                         <Accordion
-                                                            expanded={currentCategoryId == category.id || expanded === category.id}
+                                                            expanded={currentCategoryId === category.id || expanded === category.id}
                                                             onChange={handleChange(category.id)}
-                                                            sx={{ backgroundColor: "white", boxShadow: "none" }}
+                                                            disableGutters
+                                                            elevation={0}
+                                                            square
                                                         >
                                                             <AccordionSummary
-                                                                expandIcon={
-                                                                    category.children?.length > 0 ? (
-                                                                        <ExpandMoreIcon style={{ fontSize: "20px" }} />
-                                                                    ) : null
-                                                                }
-                                                                className="hover:bg-gray-100 rounded-md"
+                                                                expandIcon={category.children?.length > 0 ? <ExpandMoreIcon fontSize="small" /> : null}
+                                                                className="sidebar-category-title"
                                                             >
-                                                                <span className="font-medium text-black px-2">{category.name}</span>
+                                                                <span>{category.name}</span>
                                                             </AccordionSummary>
 
-                                                            {category?.children?.length > 0 && (
-                                                                <AccordionDetails className="child_category-details">
-                                                                    <ul className="child_category-list">
-                                                                        {category.children.map((child) => (
-                                                                            <li key={child.id} className="child_category_sublist">
-                                                                                <Link href={`/catelog/${category.id}`}>
-                                                                                    <div className=" child_category_name">{child.name}</div>
-                                                                                </Link>
+                                                            {category.children.map((child) => (
+                                                                <li key={child.id}>
+                                                                    <Link href={`/catelog/${category.id}`} className="sidebar-subitem">
+                                                                        {child.name}
+                                                                    </Link>
 
-                                                                                <AccordionDetails sx={{ paddingTop: 0, paddingBottom: 0 }}>
+                                                                    {child.children?.length > 0 && (
+                                                                        <ul className="sidebar-subchild">
+                                                                            {child.children.map((subChild) => (
+                                                                                <li key={subChild.id}>
+                                                                                    <Link href={`/shop/${subChild.name}`} className="sidebar-subchild-item">
+                                                                                        ▸ {subChild.name}
+                                                                                    </Link>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </li>
+                                                            ))}
 
-                                                                                    {child.children?.length > 0 && (
-                                                                                        <ul className="pe-4 mt-1 mb-1">
-                                                                                            {child.children.map((subChild) => (
-                                                                                                <li className="subchild__main" key={subChild.id}>
-                                                                                                    <Link href={`/shop/${subChild.name}`}>
-                                                                                                        <span className="subchild_list">
-                                                                                                            ▸ {subChild.name}
-                                                                                                        </span>
-                                                                                                    </Link>
-                                                                                                </li>
-                                                                                            ))}
-                                                                                        </ul>
-                                                                                    )}
-
-                                                                                </AccordionDetails>
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                </AccordionDetails>
-                                                            )}
                                                         </Accordion>
-                                                    </motion.div>
-                                                ))}
+                                                    </div>
+                                                ))} */}
                                                 {categories?.map((category) => (
-                                                    <motion.div
-                                                        key={category.id}
-                                                        initial={{ opacity: 0, y: -10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.3 }}
-                                                        className="mb-2 shadow-sm rounded-lg bg-white"
-                                                    >
+                                                    <div key={category.id} className="sidebar-category">
                                                         <Accordion
-                                                            expanded={currentCategoryId == category.id || expanded === category.id}
+                                                            expanded={currentCategoryId === category.id || expanded === category.id}
                                                             onChange={handleChange(category.id)}
-                                                            sx={{ backgroundColor: "white", boxShadow: "none" }}
+                                                            disableGutters
+                                                            elevation={0}
+                                                            square
                                                         >
                                                             <AccordionSummary
-                                                                expandIcon={
-                                                                    category.children?.length > 0 ? (
-                                                                        <ExpandMoreIcon style={{ fontSize: "20px" }} />
-                                                                    ) : null
-                                                                }
-                                                                className="hover:bg-gray-100 rounded-md"
+                                                                expandIcon={category.children?.length > 0 ? <ExpandMoreIcon fontSize="small" /> : null}
+                                                                className={`sidebar-category-title ${currentCategoryId === category.id ? 'active-parent' : ''}`}
                                                             >
-                                                                <span className="font-medium text-black px-2">{category.name}</span>
+                                                                <span>{category.name}</span>
                                                             </AccordionSummary>
 
-                                                            {category?.children?.length > 0 && (
-                                                                <AccordionDetails className="px-4 py-2 bg-gray-50 rounded-b-lg">
-                                                                    <ul className="space-y-3">
-                                                                        {category.children.map((child) => (
-                                                                            <li key={child.id}>
-                                                                                <Link href={`/catelog/${category.id}`}>
-                                                                                    <div className="text-base font-semibold text-gray-800 hover:text-blue-600 transition duration-200 cursor-pointer">
-                                                                                        {child.name}
-                                                                                    </div>
-                                                                                </Link>
+                                                            <AccordionDetails className="sidebar-submenu">
+                                                                <ul>
+                                                                    {category.children?.map((child) => (
+                                                                        <li key={child.id}>
+                                                                            <Link href={`/catelog/${category.id}`} className={`sidebar-subitem ${currentCategoryId === child.id ? 'active-child' : ''}`}>
+                                                                                {child.name}
+                                                                            </Link>
 
-                                                                                {child.children?.length > 0 && (
-                                                                                    <ul className="ml-4 mt-2 space-y-2 border-l border-gray-300 pl-4">
-                                                                                        {child.children.map((subChild) => (
-                                                                                            <li key={subChild.id}>
-                                                                                                <Link href={`/shop/${subChild.name}`}>
-                                                                                                    <span className="text-sm text-gray-600 hover:text-blue-500 transition duration-200 cursor-pointer">
-                                                                                                        ▸ {subChild.name}
-                                                                                                    </span>
-                                                                                                </Link>
-                                                                                            </li>
-                                                                                        ))}
-                                                                                    </ul>
-                                                                                )}
-                                                                            </li>
-                                                                        ))}
-                                                                    </ul>
-                                                                </AccordionDetails>
-                                                            )}
+                                                                            {child.children?.length > 0 && (
+                                                                                <ul className="sidebar-subchild">
+                                                                                    {child.children.map((subChild) => (
+                                                                                        <li key={subChild.id}>
+                                                                                            <Link href={`/shop/${subChild.name}`} className="sidebar-subchild-item">
+                                                                                                {/* <span className="arrow">▸</span> */}
+                                                                                                {subChild.name}
+                                                                                            </Link>
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            )}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </AccordionDetails>
                                                         </Accordion>
-                                                    </motion.div>
+                                                    </div>
                                                 ))}
-
-
                                             </ul>
-                                            <div className="shop-list-filter-categories__see-more">
-                                                <a className="shop-list-filter-categories__see-more-link" href="#">
-                                                    See more
-                                                    <svg width={8} height={6} viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M7.89553 1.02367C7.75114 0.870518 7.50961 0.864815 7.35723 1.00881L3.9998 4.18946L0.642774 1.00883C0.490387 0.86444 0.249236 0.870534 0.104474 1.02369C-0.0402885 1.17645 -0.0338199 1.4176 0.118958 1.56236L3.73809 4.99102C3.81123 5.06036 3.90571 5.0954 3.9998 5.0954C4.0939 5.0954 4.18875 5.06036 4.26191 4.99102L7.88104 1.56236C8.03382 1.41758 8.04029 1.17645 7.89553 1.02367Z" fill="#101010" />
-                                                    </svg>
-                                                </a>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
             </section >
 
             <Drawer
@@ -374,96 +360,54 @@ const CatelogPage = () => {
                 onClose={toggleDrawer}
                 direction='left'
                 className='bla bla bla'
-            >
-                <div className="single__widget price__filter widget__bg ">
-                    <div className="d-flex justify-content-between">
-                        <h2>Filters</h2>
-                        <a
-                            // onClick={handleReset}
-                            // onClick={() => handleResetFilter()}
-                            className="ms-5 mt-1"
-                            style={{ textDecoration: "underline", color: "red" }}
-                        >
-                            Reset
-                        </a>
-                    </div>
-                    <form
-                        //  onSubmit={handleFinalfilterClick} 
-                        style={{ marginBottom: "100px" }}>
-                        <div>
-                            <h3 className="mt-4">Origin</h3>
-                            <div className="d-flex align-items-center">
-                                <input type='radio' name="oem" value={"aftermarket"}
-                                // checked={origin === 'aftermarket'} onChange={() => setOrigin('aftermarket')}
-                                />
-                                &nbsp;&nbsp;
-                                <p className="mt-1">Aftermarket</p>
-                            </div>
-                            <div className="d-flex align-items-center">
-                                <input type='radio' name="oem" value="oem"
-                                // checked={origin === 'oem'} onChange={() => setOrigin('oem')}
-                                />
-                                &nbsp;&nbsp;
-                                <p className="mt-1">OEM </p>
-                            </div>
-                        </div>
-                        <div className="mt-4">
-                            {/* <div className="d-flex justify-content-between">
-                                        <h3 className="mt-1">Vehicle</h3>
-                                        <a onClick={handleReset} style={{ color: "#12477a" }}>
-                                        Reset
-                                        </a>
-                                    </div> */}
-                            <div className="mt-3 mb-3">
-                                <select
-                                    className="vehicle_select_model"
-                                // onChange={(e) => setCompany(e.target.value)}
-                                // value={company || ""}
+                style={{ zIndex: 999 }}
 
+            >
+                <ul className="widget__categories--menu" style={{ height: "100vh", overflowY: "scroll" }}>
+                    {categories?.map((category) => (
+                        <div key={category.id} className="sidebar-category">
+                            <Accordion
+                                expanded={currentCategoryId === category.id || expanded === category.id}
+                                onChange={handleChange(category.id)}
+                                disableGutters
+                                elevation={0}
+                                square
+                            >
+                                <AccordionSummary
+                                    expandIcon={category.children?.length > 0 ? <ExpandMoreIcon fontSize="small" /> : null}
+                                    className={`sidebar-category-title ${currentCategoryId === category.id ? 'active-parent' : ''}`}
                                 >
-                                    <option selected value={"car"}>
-                                        Choose Car Maker
-                                    </option>
-                                    {/* {carName.map((e, index) => {
-                                        return (
-                                            <option value={e?.id} key={index}  >
-                                                {e?.name}
-                                            </option>
-                                        );
-                                    })} */}
-                                </select>
-                            </div>
+                                    <span>{category.name}</span>
+                                </AccordionSummary>
+
+                                <AccordionDetails className="sidebar-submenu">
+                                    <ul>
+                                        {category.children?.map((child) => (
+                                            <li key={child.id}>
+                                                <Link href={`/catelog/${category.id}`} className={`sidebar-subitem ${currentCategoryId === child.id ? 'active-child' : ''}`}>
+                                                    {child.name}
+                                                </Link>
+
+                                                {child.children?.length > 0 && (
+                                                    <ul className="sidebar-subchild">
+                                                        {child.children.map((subChild) => (
+                                                            <li key={subChild.id}>
+                                                                <Link href={`/shop/${subChild.name}`} className="sidebar-subchild-item">
+                                                                    {/* <span className="arrow">▸</span> */}
+                                                                    {subChild.name}
+                                                                </Link>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                )}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </AccordionDetails>
+                            </Accordion>
                         </div>
-                        <div className="mt-4">
-                            <h3>Price</h3>
-                            <div className="form_filter">
-                                <label>
-                                    From
-                                    <input
-                                        type="number"
-                                        placeholder="0"
-                                    // value={price.price_start}
-                                    // value={Stprice || ""}
-                                    // onChange={(e) => setStPrice(e.target.value)}
-                                    // onChange={handlePriceChange}
-                                    />
-                                </label>
-                                <label>
-                                    To
-                                    <input
-                                        type="number"
-                                        placeholder="250"
-                                    // value={endPrice || ""}
-                                    // onChange={(e) => setEndPrice(e.target.value)}
-                                    />
-                                </label>
-                            </div>
-                            <div className="form_filter_btn">
-                                <button>Filter</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
+                    ))}
+                </ul>
             </Drawer>
         </div >
     );

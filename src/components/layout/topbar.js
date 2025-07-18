@@ -41,7 +41,7 @@ export default function Topbar() {
                             </li>
                             <li className="header__info--list">
                                 <Link
-                                    className="header__info--link "
+                                    className="header__info--link d-flex"
                                     href="mailto:info@example.com"
                                 >
                                     <svg
@@ -65,7 +65,7 @@ export default function Topbar() {
                                 <li className="header__link--menu">
                                     <Link
                                         href="#"
-                                        className="header__link--menu__text "
+                                        className="header__link--menu__text d-flex"
                                         to="/wishlist"
                                     >
                                         <AiOutlineHeart style={{ fontSize: "20px" }} />

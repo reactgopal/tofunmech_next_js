@@ -1,11 +1,4 @@
-import {
-    Document,
-    Page,
-    Text,
-    View,
-    StyleSheet,
-    Image,
-} from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 
 const styles = StyleSheet.create({
     page: {
@@ -187,42 +180,21 @@ const formatCurrency = (value) =>
         currency: "INR",
         minimumFractionDigits: 2,
     }).format(value || 0);
-
-const Invoice = ({ order }) => {
-    if (!order || typeof order !== 'object') {
-        return (
-            <Document>
-                <Page size="A4" style={styles.page}>
-                    <Text>Invalid order data</Text>
-                </Page>
-            </Document>
-        );
-    }
-
+export default function Invoice({ order }) {
     const {
-        name = 'N/A',
-        mobile = 'N/A',
-        email = 'N/A',
-        address = 'N/A',
-        id = 'N/A',
-        coupon_value = '0',
-        total_amount = '0',
-        payment_status = 'Paid',
-        order_status = 'Completed',
-        order_detail = [],
-        addresses = {},
-        invoice_number = '579989',
-        invoice_date = new Date().toLocaleDateString(),
+        name,
+        address,
+        mobile,
+        email,
+        coupon_value,
+        total_amount,
+        order_detail,
+        created_at,
+        addresses,
     } = order;
 
-    // Calculate totals
-    // const subtotal = Array.isArray(order_detail) ? order_detail.reduce((sum, item) => sum + ((item?.price || 0) * (item?.qty || 0)), 0) : parseFloat(total_amount?.toString() || '0');
-
-    // const taxRate = 0.18; // 18% tax
-    // const taxAmount = subtotal * taxRate;
-    // const discount = subtotal * 0.10; // 10% discount
-    // const grandTotal = subtotal + taxAmount - discount;
-
+    const invoice_number = `INV-${order.id}`;
+    const invoice_date = new Date(created_at).toLocaleDateString("en-IN");
     return (
         <Document>
             <Page size="A4" style={styles.page}>
@@ -301,25 +273,15 @@ const Invoice = ({ order }) => {
                     order_detail.map((item, index) => (
                         <View key={index} style={styles.tableRow}>
                             <View style={styles.tableCol1}>
-                                <Text style={styles.itemDescription}>
-                                    {item?.product_name || 'Service Item'}
-                                </Text>
+                                <Text style={styles.itemDescription}>{item?.product_name || 'Service Item'}</Text>
                                 <Text style={styles.itemSubtext}>
                                     {item?.description || 'Company to popular belief Lorem Ipsum simply'}
                                 </Text>
                             </View>
-                            <View style={styles.tableCol2}>
-                                {/* <Text style={styles.tableText}>${(item?.price || 0).toFixed(2)}</Text> */}
-                                <Text style={styles.tableText}>{item?.price}</Text>
-                            </View>
-                            <View style={styles.tableCol3}>
-                                <Text style={styles.tableText}>{item?.qty || 1}</Text>
-                            </View>
+                            <View style={styles.tableCol2}><Text style={styles.tableText}>{formatCurrency(item?.price)}</Text></View>
+                            <View style={styles.tableCol3}><Text style={styles.tableText}>{item?.qty || 1}</Text></View>
                             <View style={styles.tableCol4}>
-                                <Text style={styles.tableText}>
-                                    {(item?.price) * (item?.qty)}
-                                    {/* $111 */}
-                                </Text>
+                                <Text style={styles.tableText}>{formatCurrency(item?.price * item?.qty)}</Text>
                             </View>
                         </View>
                     ))
@@ -393,7 +355,7 @@ const Invoice = ({ order }) => {
                     <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>SUB TOTAL</Text>
                         {/* <Text style={styles.totalValue}>${subtotal.toFixed(2)}</Text> */}
-                        <Text style={styles.totalValue}>$100</Text>
+                        <Text style={styles.totalValue}>{total_amount}</Text>
                     </View>
                     {/* <View style={styles.totalRow}>
                         <Text style={styles.totalLabel}>Tax Vat 18%</Text>
@@ -405,7 +367,9 @@ const Invoice = ({ order }) => {
                     </View>
                     <View style={styles.grandTotalRow}>
                         <Text style={styles.grandTotalLabel}>Grand Total</Text>
-                        <Text style={styles.grandTotalValue}>{total_amount}</Text>
+                        <Text style={styles.grandTotalValue}>
+                            {formatCurrency(total_amount - (coupon_value || 0))}
+                        </Text>
                     </View>
                 </View>
 
@@ -418,25 +382,24 @@ const Invoice = ({ order }) => {
                     <Text style={styles.footerText}>Razorpay: razorpay@invoice.com Card</Text>
                 </View>
                 <View style={styles.contact}>
-                    {Array.isArray(addresses) && addresses.length > 0 ? (
-                        addresses.map((item, index) => (
-                            <View key={index}>
-                                <Text style={styles.sectionTitle}>Contact</Text>
-                                <Text style={styles.footerText}>{item?.address},{item?.city},{item?.state},{item?.country}</Text>
-                                {/* <Text style={styles.footerText}>www.123.456.789 | info@yourname.com</Text> */}
-                                <Text style={styles.footerText}>+91{item?.mobile}</Text>
-                            </View>
-                        ))
+                    <Text style={styles.sectionTitle}>Contact</Text>
+
+                    {addresses ? (
+                        <View>
+                            <Text style={styles.footerText}>
+                                {addresses.address}, {addresses.city}, {addresses.state}, {addresses.country} - {addresses.pincode}
+                            </Text>
+                            <Text style={styles.footerText}>+91 {addresses.mobile}</Text>
+                        </View>
                     ) : (
                         <View>
-                            <Text style={styles.sectionTitle}>Contact</Text>
                             <Text style={styles.footerText}>123 Street, Town Portal, Country</Text>
                             <Text style={styles.footerText}>www.123.456.789 | info@yourname.com</Text>
                             <Text style={styles.footerText}>+987 654 321</Text>
                         </View>
-                    )
-                    }
+                    )}
                 </View>
+
                 {/* </View> */}
 
                 {/* Signature */}
@@ -455,6 +418,4 @@ const Invoice = ({ order }) => {
             </Page>
         </Document>
     );
-};
-
-export default Invoice;
+}

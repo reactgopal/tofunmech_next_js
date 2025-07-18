@@ -10,6 +10,8 @@ import { AiOutlineClose } from "react-icons/ai";
 // import Breadcrumb from "../Utils/breadcrumb";
 import { MdReviews } from "react-icons/md";
 import { toast } from "react-toastify";
+import { Banknote, CreditCard, Smartphone } from "lucide-react";
+import { Button } from "@mui/material";
 
 const Review = () => {
     const dispatch = useDispatch();
@@ -44,11 +46,12 @@ const Review = () => {
     const [email, setEmail] = useState("");
     const [errors, setErrors] = useState('');
 
-//
+    //
     const [isInsuranceOpen, setInsuranceOpen] = useState(false);
     const [Insuranceval, setInsuranceval] = useState(null);
     const [policyNumber, setpolicyNumber] = useState(null);
     const [carNumber, setcarNumber] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState('credit-card');
 
     const [type, setType] = useState('');
 
@@ -143,7 +146,7 @@ const Review = () => {
         });
         rzp.open();
     };
-    
+
     const handleSubmit = () => {
         if (!type && !Insuranceval && !policyNumber) {
             // setErrors()
@@ -461,11 +464,11 @@ const Review = () => {
                                     </div>
 
                                     <div className="checkout__content--step__footer d-flex justify-content-between align-items-center">
-                                        <Link className="previous__link--content" href="/checkout">
+                                        <Link className="previous__link--content d-flex align-items-center" href="/checkout">
                                             <IoIosArrowBack /> Return to Information
                                         </Link>
                                         <button
-                                            className="continue__shipping--btn primary__btn border-radius-5 ms-5"
+                                            className="continue__shipping--btn"
                                             id="rzp-button1"
                                             onClick={handleSubmit}
                                         >
@@ -569,12 +572,13 @@ const Review = () => {
                                             </tfoot>
                                         </table>
                                     </div>
+
                                     <div className="payment__history mb-30">
                                         <h3 className="payment__history--title mb-20">Payment</h3>
                                         <ul className="payment__history--inner d-flex">
                                             <li className="payment__history--list">
                                                 <button
-                                                    className="payment__history--link primary__btn"
+                                                    className="payment__history--link continue__shipping--btn ms-2"
                                                     type="submit"
                                                 >
                                                     Credit Card
@@ -582,7 +586,7 @@ const Review = () => {
                                             </li>
                                             <li className="payment__history--list">
                                                 <button
-                                                    className="payment__history--link primary__btn"
+                                                    className="payment__history--link continue__shipping--btn ms-2"
                                                     type="submit"
                                                 >
                                                     Bank Transfer
@@ -590,7 +594,7 @@ const Review = () => {
                                             </li>
                                             <li className="payment__history--list">
                                                 <button
-                                                    className="payment__history--link primary__btn"
+                                                    className="payment__history--link continue__shipping--btn ms-2"
                                                     type="submit"
                                                 >
                                                     Paypal

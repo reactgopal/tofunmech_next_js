@@ -36,10 +36,10 @@ export default function ClientLayout({ children }) {
 
 
             {/* page content */}
-            <main>{children}</main>
+            <main style={{ minHeight: "60vh" }}>{children}</main >
 
             {/* footer */}
-            <Footer />
+            < Footer />
         </>
     );
 }

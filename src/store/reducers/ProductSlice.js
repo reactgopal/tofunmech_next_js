@@ -13,6 +13,7 @@ export const productsSlice = createSlice({
     filter_multi: "",
     coupon_code: "",
     login_cart: [],
+    cart_count: 0, // for header count
     add_ship: [],
     selected_value_address: [],
     coupon_value: "",
@@ -112,14 +113,33 @@ export const productsSlice = createSlice({
       state.login_cart = Array.isArray(state.login_cart)
         ? [...new Map([...state.login_cart, ...payload].map(item => [item.id, item])).values()]
         : [...payload];
-    },
 
-    removeLoginAddtocart: (state, { payload }) => {
-      state.login_cart = state.login_cart.filter((e) => e.id !== payload)
+      state.cart_count = state.login_cart.reduce((total, item) => total + item.qty, 0);
+
+    },
+    // 👉 ONLY this updates header cart count
+    // updateCartCount: (state) => {
+    //   state.cart_count = state.login_cart.reduce((total, item) => total + item.qty, 0);
+    // },
+
+    // removeLoginAddtocart: (state, { payload }) => {
+    //   state.login_cart = state.login_cart.filter((e) => e.id !== payload)
+
+    //   state.cart_count = state.login_cart.reduce((total, item) => total + item.qty, 0);
+
+    // },
+    removeLoginAddtocart: (state, action) => {
+      const id = action.payload;
+      state.login_cart = state.login_cart.filter((item) => item.id !== id);
+
+      state.cart_count = state.login_cart.reduce((total, item) => total + item.qty, 0);
+
     },
 
     removeAllLoginCart: (state) => {
-      state.login_cart = []
+      state.login_cart = [];
+      state.cart_count = 0;
+
     },
 
     login_qtyIncrement_Decrement: (state, { payload }) => {
@@ -232,6 +252,7 @@ export const {
   add_coupon_code,
   remove_coupon_code,
   addLoginCart,
+  updateCartCount,
   removeLoginAddtocart,
   login_qtyIncrement_Decrement,
   removeAllLoginCart,

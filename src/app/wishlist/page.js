@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { AiOutlineClose } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function WishList() {
     const dispatch = useDispatch();
@@ -45,60 +46,72 @@ export default function WishList() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {add_wish?.map((e, index) => (
-                                        <tr key={index}>
-                                            {/* Product Name + Image + Remove */}
-                                            <td className="text-start d-flex align-items-center gap-3">
-                                                <button
-                                                    className="wishlist_remove"
-                                                    onClick={() => removeElement(e?.product?.id)}
-                                                >
-                                                    <AiOutlineClose size={18} />
-                                                </button>
-                                                <img
-                                                    src={e?.product?.image}
-                                                    alt="product"
-                                                    style={{ width: "90px", height: "auto", borderRadius: "5px" }}
-                                                />
-                                                <div>
-                                                    <div className="h3 ">
-                                                        <Link href={`/productsdetail/${e?.product?.id}/${e?.product?.PN}`} className="text-black">
-                                                            {e?.product?.name}
-                                                        </Link>
+                                    <AnimatePresence>
+                                        {add_wish?.map((e, index) => (
+                                            <motion.tr
+                                                key={index}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{
+                                                    opacity: 0, x: -100
+                                                }}
+                                                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+
+                                                layout
+                                            >
+                                                {/* Product Name + Image + Remove */}
+                                                <td className="text-start d-flex align-items-center gap-3">
+                                                    <button
+                                                        className="wishlist_remove"
+                                                        onClick={() => removeElement(e?.product?.id)}
+                                                    >
+                                                        <AiOutlineClose size={18} />
+                                                    </button>
+                                                    <img
+                                                        src={e?.product?.image}
+                                                        alt="product"
+                                                        style={{ width: "90px", height: "auto", borderRadius: "5px" }}
+                                                    />
+                                                    <div>
+                                                        <div className="h3 ">
+                                                            <Link href={`/productsdetail/${e?.product?.id}/${e?.product?.PN}`} className="text-black">
+                                                                {e?.product?.name}
+                                                            </Link>
+                                                        </div>
+                                                        <small className="p">{e?.product?.Description}</small>
                                                     </div>
-                                                    <small className="p">{e?.product?.Description}</small>
-                                                </div>
-                                            </td>
+                                                </td>
 
-                                            {/* Price */}
-                                            <td>
-                                                {e?.product?.discount_price ? (
-                                                    <>
-                                                        <span className="text-decoration-line-through text-muted me-2">
-                                                            ₹{e?.product?.price}
-                                                        </span>
-                                                        <span className="fw-bold text-success">
-                                                            ₹{e?.product?.discount_price}
-                                                        </span>
-                                                    </>
-                                                ) : (
-                                                    <span className="fw-bold">₹{e?.product?.temp_price}</span>
-                                                )}
-                                            </td>
+                                                {/* Price */}
+                                                <td>
+                                                    {e?.product?.discount_price ? (
+                                                        <>
+                                                            <span className="text-decoration-line-through text-muted me-2">
+                                                                ₹{e?.product?.price}
+                                                            </span>
+                                                            <span className="fw-bold text-success">
+                                                                ₹{e?.product?.discount_price}
+                                                            </span>
+                                                        </>
+                                                    ) : (
+                                                        <span className="fw-bold">₹{e?.product?.temp_price}</span>
+                                                    )}
+                                                </td>
 
-                                            {/* Stock */}
-                                            <td>
-                                                <span className="badge bg-success">In Stock</span>
-                                            </td>
+                                                {/* Stock */}
+                                                <td>
+                                                    <span className="badge bg-success">In Stock</span>
+                                                </td>
 
-                                            {/* Actions */}
-                                            <td>
-                                                <Link href={`/productsdetail/${e?.product?.id}/${e?.product?.PN}`} className="text-black">
-                                                    <button className="btn__wishlist">View Details</button>
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                {/* Actions */}
+                                                <td>
+                                                    <Link href={`/productsdetail/${e?.product?.id}/${e?.product?.PN}`} className="text-black">
+                                                        <button className="btn__wishlist">View Details</button>
+                                                    </Link>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </AnimatePresence>
                                 </tbody>
                             </table>
                         </div>

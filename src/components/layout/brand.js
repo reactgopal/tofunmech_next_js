@@ -6,7 +6,6 @@ import "swiper/css";
 import "swiper/css/navigation";
 import { motion } from "framer-motion";
 
-
 const brands = [
     { name: "Acura", src: "/assets/img/slider/acura.png" },
     { name: "BMW", src: "/assets/img/slider/bmw.png" },

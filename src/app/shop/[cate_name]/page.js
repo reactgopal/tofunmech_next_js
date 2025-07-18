@@ -1,22 +1,26 @@
 'use client'
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import 'react-modern-drawer/dist/index.css'
+
 import Drawer from 'react-modern-drawer'
+import { useEffect, useState } from "react";
+import { CarCompanies, Product, WishListLoginDelete } from '@/api/services/apiServices';
+import { useDispatch, useSelector } from 'react-redux';
+import { addProducts, addToWishlist, emptyProducts, removeProductWishlist } from '@/store/reducers/ProductSlice';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import Link from 'next/link';
+import Breadcrumbs from '@/utils/Breadcrumbs';
+
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { Accordion, AccordionDetails, AccordionSummary } from "@mui/material";
+
 //import styles 👇
 import { CgMenuGridR } from "react-icons/cg";
 import { TfiMenuAlt } from "react-icons/tfi";
 import { RxCross2 } from "react-icons/rx";
 import { IoMdHeartEmpty } from "react-icons/io";
-
-import { useEffect, useRef, useState } from "react";
-import { Product, WishListLoginDelete } from '@/api/services/apiServices';
-import { useDispatch, useSelector } from 'react-redux';
-import { addProducts, addToWishlist, emptyProducts, removeProductWishlist } from '@/store/reducers/ProductSlice';
-import InfiniteScroll from 'react-infinite-scroll-component';
-import Link from 'next/link';
 import { BsHeart, BsHeartFill } from 'react-icons/bs';
-import Breadcrumbs from '@/utils/Breadcrumbs';
-
+import { findCategoryById } from '@/utils/helpers';
+import { motion } from 'framer-motion';
 export default function ShopList() {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -28,16 +32,34 @@ export default function ShopList() {
     // find category name like bolt,brake,tyre
     const cate_name = decodeURIComponent(params.cate_name);
     const { add_wish } = useSelector((state) => ({ ...state.products }));
+    const { categories, status } = useSelector((state) => state.categories);
 
     const [currentItems, setCurrentItems] = useState([]);
     const itemPerPage = 20;
     const [offset, setOffset] = useState(0);
-    const [hasmore, setHasmore] = useState(true)
+    const [hasmore, setHasMore] = useState(true)
+    const [carName, setCarName] = useState([]);
 
+    // filter state 
+    const [filterData, setFilterData] = useState({});
+    const [origin, setOrigin] = useState(null);
+    const [company, setCompany] = useState(null);
+    const [Stprice, setStPrice] = useState(null);
+    const [endPrice, setEndPrice] = useState(null);
+    const [sortBy, setSortBy] = useState({ key: "price", order: "ASC", });
+    console.log(origin, "origin");
+
+    // drower and mange state
     const [isOpen, setIsOpen] = useState(false);
     const [loader, setLoader] = useState(false);
+    const [selectedValues, setSelectedValues] = useState();
     const [gridOpen, setGridOpen] = useState(true);
     const [trifOpen, setTrifOpen] = useState(true);
+    const [expanded, setExpanded] = useState(false);
+
+
+    const currentCategoryId = params ? params[params.length - 1] : null;
+    const subCategory = findCategoryById(categories, currentCategoryId);
 
     useEffect(() => {
         setLoader(true);
@@ -69,10 +91,10 @@ export default function ShopList() {
 
     var productwishIdsArray = [];
     add_wish.forEach(function (obj) {
-        console.log(obj, "obj")
+        // console.log(obj, "obj")
         productwishIdsArray.push(obj.product_id);
     });
-    console.log(add_wish, "add_wish");
+    // console.log(add_wish, "add_wish");
     const handleWish = (id) => {
         dispatch(addToWishlist({ product_id: id }));
         WishListLoginDelete({ product_id: id }).then((res) => {
@@ -99,34 +121,97 @@ export default function ShopList() {
 
     useEffect(() => {
         fetchCategoriesList();
+        CarCompanies().then((res) => {
+            setCarName(res?.data);
+        });
     }, []);
-    const fetchCategoriesList = () => {
+    const fetchCategoriesList = (customOffset = offset, isFilter = false) => {
         const data = {
             [cate]: cate_name,
-            offset: offset,
-            limit: itemPerPage
+            // offset: offset,
+            offset: customOffset,
+            limit: itemPerPage,
+            type: origin,
+            company_id: company,
+            price_start: Stprice,
+            price_end: endPrice,
+            // sort_action: sortOrder,
+            // sort_by: sortKey,
         }
         console.log(data, "data of fetchCategoriesList");
+
         Product(data).then((res) => {
-            console.log(res);
-            if (res.success = true) {
-                dispatch(addProducts(res?.data));
-                setCurrentItems([...currentItems, ...res.data]);
-                if (res.data.length === 0 || res.data.length < 20) {
-                    setHasmore(false)
+            if (res.success === true) {
+                const fetchedData = res?.data || [];
+
+                if (isFilter) {
+                    dispatch(emptyProducts());                      // 👈 Clear Redux product list
+                    dispatch(addProducts(fetchedData));             // 👈 Add new filtered products
+                    setCurrentItems(fetchedData);                   // 👈 Set filtered results locally
+                    setOffset(1);
+                    console.log("first time")                                // 👈 Reset offset for next scroll
                 } else {
-                    // setOffset(offset + 20);
-                    setOffset(offset + 1);
+                    dispatch(addProducts(fetchedData));
+                    setCurrentItems((prev) => [...prev, ...fetchedData]);
+                    // setOffset((prevOffset) => prevOffset + 1);
+                    setOffset(customOffset + 1); // ✅ Increment correctly
+
+                    console.log("second time")                                // 👈 Reset offset for next scroll
+                }
+
+                if (fetchedData.length === 0 || fetchedData.length < itemPerPage) {
+                    setHasMore(false);
+                } else {
+                    setHasMore(true);
                 }
             } else {
                 router.push("*");
             }
         }).catch((e) => {
-            console.log(e);
-            alert(e);
-        })
+            console.error(e);
+            alert("Something went wrong while fetching products.");
+        });
+        // Product(data).then((res) => {
+        //     console.log(res);
+        //     if (res.success === true) {
+        //         dispatch(addProducts(res?.data));
+        //         setCurrentItems([...currentItems, ...res.data]);
+        //         if (res.data.length === 0 || res.data.length < 20) {
+        //             setHasMore(false)
+        //         } else {
+        //             // setOffset(offset + 20);
+        //             setOffset(offset + 1);
+        //         }
+        //     } else {
+        //         router.push("*");
+        //     }
+        // }).catch((e) => {
+        //     console.log(e);
+        //     alert(e);
+        // })
     }
+    const handleFinalFilterClick = (e) => {
+        e.preventDefault();
+        // Clear products, reset scroll and offset
+        setOffset(0);
+        setCurrentItems([]);
+        setHasMore(true);
 
+        // Use a timeout or callback to ensure state is updated before fetching
+        fetchCategoriesList(0, true);
+    }
+    const sortClick = (value) => {
+        const [key, order] = value.split(",");
+        // e.preventDefault();
+        setSortBy({ key, order });
+        setOffset(0);
+        setCurrentItems([]);
+        setHasMore(true);
+        fetchCategoriesList(0, true);
+    }
+    const handleChange = (panel) => (event, isExpanded) => {
+        setExpanded(isExpanded ? panel : false);
+    };
     const toggleDrawer = () => {
         setIsOpen((prevState) => !prevState)
     }
@@ -138,7 +223,7 @@ export default function ShopList() {
                     <div className="bg-overlay rounded-4 overflow-hidden">
                         <img src="/assets/img/pageHeader/banner1.png" alt="Carento" />
                     </div>
-                    <div className="container position-absolute z-1 top-50 start-50 pb-70 translate-middle text-center">
+                    <div className="container position-absolute z-1 top-50 start-50 pb-[20px] translate-middle text-center">
                         <span className="shop-list-header__subtitle text-sm-bold rounded-4">Find cars for sale and for rent near you</span>
                         <h2>
                             Find the Perfect Part at the
@@ -215,7 +300,7 @@ export default function ShopList() {
                                                 </svg>
                                             </a>
 
-                                            <div className="shop-list-toolbar__dropdown">
+                                            {/* <div className="shop-list-toolbar__dropdown">
                                                 <span className="shop-list-toolbar__label">Show</span>
                                                 <div className="dropdown">
                                                     <button className="btn dropdown-toggle" id="dropdownShow" data-bs-toggle="dropdown" aria-expanded="false">
@@ -227,26 +312,27 @@ export default function ShopList() {
                                                         <li><a className="dropdown-item" href="#">50</a></li>
                                                     </ul>
                                                 </div>
-                                            </div>
+                                            </div> */}
 
-                                            <div className="shop-list-toolbar__dropdown">
-                                                <span className="shop-list-toolbar__label">Sort by:</span>
-                                                <div className="dropdown ">
-                                                    <button className="btn dropdown-toggle" id="dropdownSort" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <span>Most Viewed</span>
-                                                    </button>
-
-                                                    <ul className="dropdown-menu" aria-labelledby="dropdownSort">
-                                                        <li><a className="dropdown-item active" href="#">Most Viewed</a></li>
-                                                        <li><a className="dropdown-item" href="#">Recently search</a></li>
-                                                        <li><a className="dropdown-item" href="#">Most popular</a></li>
-                                                        <li><a className="dropdown-item" href="#">Top rated</a></li>
-                                                    </ul>
+                                            <div className="product-sort-wrapper d-flex align-items-center">
+                                                <label htmlFor="sortSelect" className="product-sort-label">
+                                                    Sort By:
+                                                </label>
+                                                <div className="product-sort-select-wrapper">
+                                                    <select
+                                                        id="sortSelect"
+                                                        className="product-sort-select"
+                                                    // onChange={(e) => sortClick(e.target.value)}
+                                                    // value={`${sortBy.key},${sortBy.order}`}
+                                                    >
+                                                        <option value="price,ASC">LOW TO HIGH</option>
+                                                        <option value="price,DESC">HIGH TO LOW</option>
+                                                        <option value="latest,ASC">OLD TO NEW</option>
+                                                        <option value="latest,DESC">NEW TO OLD</option>
+                                                    </select>
                                                 </div>
-                                                <button className="filter_btn d-block d-lg-none" onClick={toggleDrawer}>
-                                                    Filter
-                                                </button>
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -255,7 +341,7 @@ export default function ShopList() {
                                 <InfiniteScroll
                                     style={{ overflow: "hidden" }}
                                     dataLength={currentItems.length}
-                                    next={fetchCategoriesList}
+                                    next={() => fetchCategoriesList(offset)}  // ✅ Correctly controlled call
                                     hasMore={hasmore}
                                     endMessage={
                                         <p style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
@@ -275,15 +361,28 @@ export default function ShopList() {
                                                     {currentItems && currentItems?.map((e, index) => {
                                                         return (
                                                             <div key={index} className="col-lg-4 col-md-6">
-                                                                <div className="shop-list-products__card">
-                                                                    <div className="shop-list-products__image">
+                                                                <div
+
+                                                                    className="shop-list-products__card">
+                                                                    <motion.div
+                                                                        initial={{
+                                                                            opacity: 0, y: 100
+                                                                        }}
+                                                                        animate={{
+                                                                            opacity: 1, y: 0
+                                                                        }}
+                                                                        transition={{
+                                                                            duration: 1,
+                                                                            delay: 0
+                                                                        }}
+                                                                        className="shop-list-products__image">
                                                                         {
                                                                             user?.success === true ? (
                                                                                 <>
                                                                                     {productwishIdsArray.includes(e?.id) ? (
                                                                                         <span className="shop-list-products__wishlist">
                                                                                             <BsHeartFill
-                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
                                                                                                 onClick={() => removeElement(e?.id)}
                                                                                             />
                                                                                         </span>
@@ -301,8 +400,8 @@ export default function ShopList() {
                                                                                     <a href="/login" rel="noopener noreferrer">
                                                                                         <span className="shop-list-products__wishlist">
                                                                                             <IoMdHeartEmpty
-                                                                                                // style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                                                className='text-black' style={{ color: "black" }}
+                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                className='text-black'
                                                                                             />
                                                                                         </span>
                                                                                     </a>
@@ -316,7 +415,7 @@ export default function ShopList() {
                                                                             src={e?.image}
                                                                             alt="Carento"
                                                                         />
-                                                                    </div>
+                                                                    </motion.div>
                                                                     <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
                                                                         <div className="shop-list-products__info">
                                                                             {/* <div className="shop-list-products__rating">
@@ -341,6 +440,7 @@ export default function ShopList() {
                                                                                 <button>
                                                                                     View Details
                                                                                 </button>
+
                                                                             </div>
                                                                         </div>
                                                                     </Link>
@@ -355,7 +455,7 @@ export default function ShopList() {
                                                 <div className="row">
                                                     {currentItems?.map((e, index) => (
                                                         <div key={index} className="col-xl-12 col-lg-12">
-                                                            <div className="car-list-card d-flex align-items-center">
+                                                            <div className="car-list-card d-flex align-items-center position-relative">
                                                                 <div className="car-list-card__image">
                                                                     <img src={e?.image} alt={e?.name} />
                                                                 </div>
@@ -371,7 +471,7 @@ export default function ShopList() {
                                                                                     {productwishIdsArray.includes(e?.id) ? (
                                                                                         <span className="shop-list-products__rating-value">
                                                                                             <BsHeartFill
-                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
                                                                                                 onClick={() => removeElement(e?.id)}
                                                                                             />
                                                                                         </span>
@@ -398,21 +498,25 @@ export default function ShopList() {
                                                                             )
                                                                         }
                                                                     </div>
-                                                                    <div className="car-list-card__top d-flex justify-content-between">
-                                                                        <div>
-                                                                            <h4 className='text-black'>{e?.name}</h4>
-                                                                            <p className="location">📍 Manchester, England</p>
+                                                                    <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
+                                                                        <div className="car-list-card__top d-flex justify-content-between">
+                                                                            <div>
+                                                                                <h4 className='text-black'>{e?.name}</h4>
+                                                                                <p className="location">📍 Manchester, England</p>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                    <div className="features d-flex flex-wrap">
-                                                                    </div>
-                                                                    <div className="car-list-card__bottom d-flex justify-content-between align-items-center">
-                                                                        {/* <h3 className="price">${e?.price} <span>/ night</span></h3> */}
-                                                                        <h6 className="shop-list-products__price">{e?.price}/-</h6>
+                                                                        <div className="features d-flex flex-wrap">
+                                                                        </div>
+                                                                        <div className="car-list-card__bottom d-flex justify-content-between align-items-center">
+                                                                            {/* <h3 className="price">${e?.price} <span>/ night</span></h3> */}
+                                                                            <h6 className="shop-list-products__price">{e?.price}/-</h6>
+                                                                            <button>
+                                                                                View Details
+                                                                            </button>
+                                                                            {/* <a className="btn btn-gray" href="/shop-details">View Details</a> */}
 
-                                                                        <a className="btn btn-gray" href="/shop-details">View Details</a>
-
-                                                                    </div>
+                                                                        </div>
+                                                                    </Link>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -424,72 +528,73 @@ export default function ShopList() {
                                     }
                                 </InfiniteScroll>
                             </div>
-                            {/* <nav className="shop-list-pagination" aria-label="Page navigation">
-                                <ul className="shop-list-pagination__list">
-                                    <li className="shop-list-pagination__item">
-                                        <a className="shop-list-pagination__link" aria-label="Previous" href="#">
-                                            <span aria-hidden="true">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M6.00016 1.33325L1.3335 5.99992M1.3335 5.99992L6.00016 10.6666M1.3335 5.99992H10.6668"
-                                                        stroke="#101010" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </a>
-                                    </li>
-                                    {[1, 2, 3, 4, 5].map((page) => (
-                                        <li key={page} className="shop-list-pagination__item">
-                                            <a className={`shop-list-pagination__link${page === 2 ? ' active' : ''}`} href="#">
-                                                {page}
-                                            </a>
-                                        </li>
-                                    ))}
-                                    <li className="shop-list-pagination__item">
-                                        <a className="shop-list-pagination__link" href="#">...</a>
-                                    </li>
-                                    <li className="shop-list-pagination__item">
-                                        <a className="shop-list-pagination__link" aria-label="Next" href="#">
-                                            <span aria-hidden="true">
-                                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.99967 10.6666L10.6663 5.99992L5.99968 1.33325M10.6663 5.99992L1.33301 5.99992"
-                                                        stroke="#101010" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav> */}
+
 
                         </div>
                         {/* filter area code  */}
-                        <div className="content-left order-lg-first d-none d-lg-block">
-                            <div className="shop-list-filter-price ">
-                                <div className="shop-list-filter-price__wrapper">
-                                    <div className="shop-list-filter-price__block">
-                                        <h6 className="shop-list-filter-price__title">Filter Price</h6>
-                                        <div className="shop-list-filter-price__collapse">
-                                            <div className="shop-list-filter-price__padding">
-                                                <div className="shop-list-filter-price__slider">
-                                                    <div id="slider-range"></div>
-                                                    <div className="shop-list-filter-price__value-range">
-                                                        <span className="shop-list-filter-price__value">$0</span>
-                                                        <span className="shop-list-filter-price__value">$500</span>
+                        <div className="content-left order-lg-first d-none d-lg-block shop__sidebar--widget">
+                            <div className="shop-list-filter-categories">
+                                <div className="shop-list-filter-categories__wrapper">
+                                    <div className="d-flex justify-content-between">
+                                        <h2 className='text-black'>Filters</h2>
+                                        <a
+                                            // onClick={handleReset}
+                                            // onClick={() => handleResetFilter()}
+                                            className="ms-5 mt-1"
+                                            style={{ textDecoration: "underline", color: "red" }}
+                                        >
+                                            Reset
+                                        </a>
+                                    </div>
+                                    <hr />
+                                    <div className="filter-box">
+                                        <form onSubmit={handleFinalFilterClick}>
+                                            {/* Origin Section */}
+                                            <div className="filter-section">
+                                                <h6 className="filter-title">Origin</h6>
+                                                <label className="radio-label">
+                                                    <input type="radio" name="origin" checked={origin === 'oem'} onChange={() => setOrigin('oem')} />
+                                                    <span>OEM</span>
+                                                </label>
+                                                <select name="carMaker" className="vehicle-select"
+                                                    onChange={(e) => setCompany(e.target.value)}
+                                                    value={company || ""}
+                                                >
+                                                    <option selected value={""}>Choose Car Maker</option>
+                                                    {carName.map((e, index) => {
+                                                        return (
+                                                            <option value={e?.id} key={index}  >
+                                                                {e?.name}
+                                                            </option>
+                                                        );
+                                                    })}
+                                                </select>
+                                            </div>
+
+                                            {/* Price Section */}
+                                            <div className="filter-section">
+                                                <h6 className="filter-title">Price</h6>
+                                                <div className="price-range">
+                                                    <div className="price-input">
+                                                        <span>From</span>
+                                                        <input type="number" placeholder="0"
+                                                            value={Stprice || ""}
+                                                            onChange={(e) => setStPrice(e.target.value)}
+                                                        />
                                                     </div>
-                                                    <input className="shop-list-filter-price__input" type="hidden" />
+                                                    <div className="price-input">
+                                                        <span>To</span>
+                                                        <input type="number" placeholder="250"
+                                                            value={endPrice || ""}
+                                                            onChange={(e) => setEndPrice(e.target.value)}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="shop-list-filter-price__footer">
-                                            <a className="shop-list-filter-price__clear" href="#">
-                                                <div className="shop-list-filter-price__icon">
-                                                    <RxCross2 />
-                                                </div>
-                                                <span className="shop-list-filter-price__clear-text">Clear</span>
-                                            </a>
-                                            <a className="shop-list-filter-price__apply" href="#">
-                                                {/* <img src="/assets/imgs/template/icons/user.svg" alt="Carento" /> */}
-                                                Apply
-                                            </a>
-                                        </div>
+                                            <div className="filter-button">
+                                                <button >Filter</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -498,185 +603,96 @@ export default function ShopList() {
                                 <div className="shop-list-filter-categories__wrapper">
                                     <div className="shop-list-filter-categories__block">
                                         <h6 className="shop-list-filter-categories__title">Categories</h6>
+                                        <hr />
                                         <div className="shop-list-filter-categories__collapse">
-                                            <ul className="shop-list-filter-categories__checkbox-list">
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Accessories</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">198</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Automotive Rims</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">32</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Brakes</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">13</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Detailing</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">23</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Headlight</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">35</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Tires &amp; Wheels</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">56</span> */}
-                                                </li>
-                                                <li>
-                                                    <label className="shop-list-filter-categories__checkbox">
-                                                        <input type="checkbox" />
-                                                        <span className="shop-list-filter-categories__label">Auto Safety &amp; Security</span>
-                                                        {/* <span className="shop-list-filter-categories__checkmark" /> */}
-                                                    </label>
-                                                    {/* <span className="shop-list-filter-categories__count">76</span> */}
-                                                </li>
-                                            </ul>
+                                            <ul className="shop-list-filter-categories__checkbox-list" style={{ maxHeight: "600px", overflowY: "auto" }}>
+                                                {/* {categories?.map((category) => (
+                                                    <div key={category.id} className="sidebar-category">
+                                                        <Accordion
+                                                            expanded={currentCategoryId === category.id || expanded === category.id}
+                                                            onChange={handleChange(category.id)}
+                                                            disableGutters
+                                                            elevation={0}
+                                                            square
+                                                        >
+                                                            <AccordionSummary
+                                                                expandIcon={category.children?.length > 0 ? <ExpandMoreIcon fontSize="small" /> : null}
+                                                                className="sidebar-category-title"
+                                                            >
+                                                                <span>{category.name}</span>
+                                                            </AccordionSummary>
 
-                                            <div className="shop-list-filter-categories__see-more">
-                                                <a className="shop-list-filter-categories__see-more-link" href="#">
-                                                    See more
-                                                    <svg width={8} height={6} viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M7.89553 1.02367C7.75114 0.870518 7.50961 0.864815 7.35723 1.00881L3.9998 4.18946L0.642774 1.00883C0.490387 0.86444 0.249236 0.870534 0.104474 1.02369C-0.0402885 1.17645 -0.0338199 1.4176 0.118958 1.56236L3.73809 4.99102C3.81123 5.06036 3.90571 5.0954 3.9998 5.0954C4.0939 5.0954 4.18875 5.06036 4.26191 4.99102L7.88104 1.56236C8.03382 1.41758 8.04029 1.17645 7.89553 1.02367Z" fill="#101010" />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="shop-list-filter-brands">
-                                <div className="shop-list-filter-brands__wrapper">
-                                    <div className="shop-list-filter-brands__block">
-                                        <h6 className="shop-list-filter-brands__title">Brands</h6>
-                                        <div className="shop-list-filter-brands__collapse">
-                                            <ul className="shop-list-filter-brands__checkbox-list">
-                                                {[
-                                                    { label: 'All', count: 32 },
-                                                    { label: 'Honda', count: 13 },
-                                                    { label: 'Hyundai', count: 23 },
-                                                    { label: 'Jaguar', count: 23 },
-                                                    { label: 'Lexus', count: 35 },
-                                                    { label: 'Lotus', count: 56 },
-                                                    { label: 'Toyota', count: 76 },
-                                                ].map((brand, index) => (
-                                                    <li key={index}>
-                                                        <label className="shop-list-filter-brands__checkbox">
-                                                            <input type="checkbox" />
-                                                            <span className="shop-list-filter-brands__label">{brand.label}</span>
-                                                            {/* <span className="shop-list-filter-brands__checkmark" /> */}
-                                                        </label>
-                                                        {/* <span className="shop-list-filter-brands__count">{brand.count}</span> */}
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                                            {category.children.map((child) => (
+                                                                <li key={child.id}>
+                                                                    <Link href={`/catelog/${category.id}`} className="sidebar-subitem">
+                                                                        {child.name}
+                                                                    </Link>
 
-                                            <div className="shop-list-filter-brands__see-more">
-                                                <a className="shop-list-filter-brands__see-more-link" href="#">
-                                                    See more
-                                                    <svg width={8} height={6} viewBox="0 0 8 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path
-                                                            d="M7.89553 1.02367C7.75114 0.870518 7.50961 0.864815 7.35723 1.00881L3.9998 4.18946L0.642774 1.00883C0.490387 0.86444 0.249236 0.870534 0.104474 1.02369C-0.0402885 1.17645 -0.0338199 1.4176 0.118958 1.56236L3.73809 4.99102C3.81123 5.06036 3.90571 5.0954 3.9998 5.0954C4.0939 5.0954 4.18875 5.06036 4.26191 4.99102L7.88104 1.56236C8.03382 1.41758 8.04029 1.17645 7.89553 1.02367Z"
-                                                            fill="#101010"
-                                                        />
-                                                    </svg>
-                                                </a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                                                    {child.children?.length > 0 && (
+                                                                        <ul className="sidebar-subchild">
+                                                                            {child.children.map((subChild) => (
+                                                                                <li key={subChild.id}>
+                                                                                    <Link href={`/shop/${subChild.name}`} className="sidebar-subchild-item">
+                                                                                        ▸ {subChild.name}
+                                                                                    </Link>
+                                                                                </li>
+                                                                            ))}
+                                                                        </ul>
+                                                                    )}
+                                                                </li>
+                                                            ))}
 
-                            <div className="shop-list-filter-fuel">
-                                <div className="shop-list-filter-fuel__wrapper">
-                                    <div className="shop-list-filter-fuel__block">
-                                        <h6 className="shop-list-filter-fuel__title">Fuel Type</h6>
-                                        <div className="shop-list-filter-fuel__collapse">
-                                            <ul className="shop-list-filter-fuel__checkbox-list">
-                                                {[
-                                                    { label: 'All', count: 32 },
-                                                    { label: 'Plug-in Hybrid (PHEV)', count: 13 },
-                                                    { label: 'Hybrid (HEV)', count: 23 },
-                                                    { label: 'Electric Vehicle (EV)', count: 23 },
-                                                    { label: 'Diesel', count: 35 },
-                                                    { label: 'Gasoline/Petrol', count: 56 },
-                                                    { label: 'Hydrogen', count: 76 },
-                                                ].map((fuel, index) => (
-                                                    <li key={index}>
-                                                        <label className="shop-list-filter-fuel__checkbox">
-                                                            <input type="checkbox" />
-                                                            <span className="shop-list-filter-fuel__label">{fuel.label}</span>
-                                                            {/* <span className="shop-list-filter-fuel__checkmark" /> */}
-                                                        </label>
-                                                        {/* <span className="shop-list-filter-fuel__count">{fuel.count}</span> */}
-                                                    </li>
+                                                        </Accordion>
+                                                    </div>
+                                                ))} */}
+                                                {categories?.map((category) => (
+                                                    <div key={category.id} className="sidebar-category">
+                                                        <Accordion
+                                                            expanded={currentCategoryId === category.id || expanded === category.id}
+                                                            onChange={handleChange(category.id)}
+                                                            disableGutters
+                                                            elevation={0}
+                                                            square
+                                                        >
+                                                            <AccordionSummary
+                                                                expandIcon={category.children?.length > 0 ? <ExpandMoreIcon fontSize="small" /> : null}
+                                                                className={`sidebar-category-title ${currentCategoryId === category.id ? 'active-parent' : ''}`}
+                                                            >
+                                                                <span>{category.name}</span>
+                                                            </AccordionSummary>
+
+                                                            <AccordionDetails className="sidebar-submenu">
+                                                                <ul>
+                                                                    {category.children?.map((child) => (
+                                                                        <li key={child.id}>
+                                                                            <Link href={`/catelog/${category.id}`} className={`sidebar-subitem ${currentCategoryId === child.id ? 'active-child' : ''}`}>
+                                                                                {child.name}
+                                                                            </Link>
+
+                                                                            {child.children?.length > 0 && (
+                                                                                <ul className="sidebar-subchild">
+                                                                                    {child.children.map((subChild) => (
+                                                                                        <li key={subChild.id}>
+                                                                                            <Link href={`/shop/${subChild.name}`} className="sidebar-subchild-item">
+                                                                                                {/* <span className="arrow">▸</span> */}
+                                                                                                {subChild.name}
+                                                                                            </Link>
+                                                                                        </li>
+                                                                                    ))}
+                                                                                </ul>
+                                                                            )}
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </AccordionDetails>
+                                                        </Accordion>
+                                                    </div>
                                                 ))}
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="shop-list-filter-review">
-                                <div className="shop-list-filter-review__wrapper">
-                                    <div className="shop-list-filter-review__block">
-                                        <h6 className="shop-list-filter-review__title">Review Score</h6>
-                                        <div className="shop-list-filter-review__collapse">
-                                            <ul className="shop-list-filter-review__checkbox-list">
-                                                {[
-                                                    ['yellow', 'yellow', 'yellow', 'yellow', 'yellow'],
-                                                    ['yellow', 'yellow', 'yellow', 'yellow', 'grey'],
-                                                    ['yellow', 'yellow', 'yellow', 'grey', 'grey'],
-                                                    ['yellow', 'yellow', 'grey', 'grey', 'grey'],
-                                                    ['yellow', 'grey', 'grey', 'grey', 'grey'],
-                                                ].map((stars, index) => (
-                                                    <li key={index}>
-                                                        <label className="shop-list-filter-review__checkbox">
-                                                            <input type="checkbox" />
-                                                            <span className="shop-list-filter-review__stars">
-                                                                {stars.map((color, i) => (
-                                                                    <img
-                                                                        key={i}
-                                                                        src={`/assets/img/icons/star-${color}.svg`}
-                                                                        alt="Star"
-                                                                    />
-                                                                ))}
-                                                            </span>
-                                                            {/* <span className="shop-list-filter-review__checkmark" /> */}
-                                                        </label>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
                 </div>
@@ -700,83 +716,57 @@ export default function ShopList() {
                             Reset
                         </a>
                     </div>
-                    <form
-                        //  onSubmit={handleFinalfilterClick} 
-                        style={{ marginBottom: "100px" }}>
-                        <div>
-                            <h3 className="mt-4">Origin</h3>
-                            <div className="d-flex align-items-center">
-                                <input type='radio' name="oem" value={"aftermarket"}
-                                // checked={origin === 'aftermarket'} onChange={() => setOrigin('aftermarket')}
-                                />
-                                &nbsp;&nbsp;
-                                <p className="mt-1">Aftermarket</p>
-                            </div>
-                            <div className="d-flex align-items-center">
-                                <input type='radio' name="oem" value="oem"
-                                // checked={origin === 'oem'} onChange={() => setOrigin('oem')}
-                                />
-                                &nbsp;&nbsp;
-                                <p className="mt-1">OEM </p>
-                            </div>
+                    {/* <div className="filter-box"> */}
+                    <form onSubmit={handleFinalFilterClick}>
+                        {/* Origin Section */}
+                        <div className="filter-section">
+                            <h6 className="filter-title">Origin</h6>
+                            <label className="radio-label">
+                                <input type="radio" name="origin" checked={origin === 'oem'} onChange={() => setOrigin('oem')} />
+                                <span>OEM</span>
+                            </label>
+                            <select name="carMaker" className="vehicle-select"
+                                onChange={(e) => setCompany(e.target.value)}
+                                value={company || ""}
+                            >
+                                <option selected value={""}>Choose Car Maker</option>
+                                {carName.map((e, index) => {
+                                    return (
+                                        <option value={e?.id} key={index}  >
+                                            {e?.name}
+                                        </option>
+                                    );
+                                })}
+                            </select>
                         </div>
-                        <div className="mt-4">
-                            {/* <div className="d-flex justify-content-between">
-                                        <h3 className="mt-1">Vehicle</h3>
-                                        <a onClick={handleReset} style={{ color: "#12477a" }}>
-                                        Reset
-                                        </a>
-                                    </div> */}
-                            <div className="mt-3 mb-3">
-                                <select
-                                    className="vehicle_select_model"
-                                // onChange={(e) => setCompany(e.target.value)}
-                                // value={company || ""}
 
-                                >
-                                    <option selected value={""}>
-                                        Choose Car Maker
-                                    </option>
-                                    {/* {carName.map((e, index) => {
-                                        return (
-                                            <option value={e?.id} key={index}  >
-                                                {e?.name}
-                                            </option>
-                                        );
-                                    })} */}
-                                </select>
+                        {/* Price Section */}
+                        <div className="filter-section">
+                            <h6 className="filter-title">Price</h6>
+                            <div className="price-range">
+                                <div className="price-input">
+                                    <span>From</span>
+                                    <input type="number" placeholder="0"
+                                        value={Stprice || ""}
+                                        onChange={(e) => setStPrice(e.target.value)}
+                                    />
+                                </div>
+                                <div className="price-input">
+                                    <span>To</span>
+                                    <input type="number" placeholder="250"
+                                        value={endPrice || ""}
+                                        onChange={(e) => setEndPrice(e.target.value)}
+                                    />
+                                </div>
                             </div>
                         </div>
-                        <div className="mt-4">
-                            <h3>Price</h3>
-                            <div className="form_filter">
-                                <label>
-                                    From
-                                    <input
-                                        type="number"
-                                        placeholder="0"
-                                    // value={price.price_start}
-                                    // value={Stprice || ""}
-                                    // onChange={(e) => setStPrice(e.target.value)}
-                                    // onChange={handlePriceChange}
-                                    />
-                                </label>
-                                <label>
-                                    To
-                                    <input
-                                        type="number"
-                                        placeholder="250"
-                                    // value={endPrice || ""}
-                                    // onChange={(e) => setEndPrice(e.target.value)}
-                                    />
-                                </label>
-                            </div>
-                            <div className="form_filter_btn">
-                                <button>Filter</button>
-                            </div>
+                        <div className="filter-button">
+                            <button >Filter</button>
                         </div>
                     </form>
+                    {/* </div> */}
                 </div>
+
             </Drawer>
         </div >
     );
