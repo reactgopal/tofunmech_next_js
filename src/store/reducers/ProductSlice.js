@@ -71,12 +71,20 @@ export const productsSlice = createSlice({
 
     // =============================================================== ADD_TO_CART==========================================================
     // =====================================================================================================================================
+    // addToCart: (state, { payload }) => {
+    //   // Check if the product with the same proId already exists in the cart
+    //   const productExists = state.addto_cart.some(
+    //     (item) => item.proId === payload.proId
+    //   );
+
+    //   if (!productExists) {
+    //     state.addto_cart = [...state.addto_cart, payload];
+    //   }
+    // },
     addToCart: (state, { payload }) => {
-      // Check if the product with the same proId already exists in the cart
       const productExists = state.addto_cart.some(
         (item) => item.proId === payload.proId
       );
-
       if (!productExists) {
         state.addto_cart = [...state.addto_cart, payload];
       }

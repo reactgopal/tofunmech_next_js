@@ -16,6 +16,8 @@ const rootReducer = combineReducers({
     products: productsSlice,
     categories: categorySlice,
     selectedCategories: selectedCategoriesSlice,
+    // 🔥 ADD THIS:
+    cart: productsSlice,  // or whatever slice holds login_cart
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

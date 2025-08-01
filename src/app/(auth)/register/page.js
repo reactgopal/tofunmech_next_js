@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import HideShow from "@/utils/HideShow";
 import { Register } from "@/api/services/apiServices";
 import { toast } from 'react-toastify';
+import Link from 'next/link';
 
 
 export default function RegisterForm() {
@@ -103,10 +104,15 @@ export default function RegisterForm() {
                                         </div>
 
                                         {
-                                            isopen & isopen1 ? <div className="my-5">
-                                                <p className="position-absolute  text-black " style={{ left: "49.2%", transform: "translateX(-50%)", top: "26.5%", transform: "translateY(-50%)" }}>OR</p>
-                                                <hr className="position-relative" />
-                                            </div> : ""
+                                            // isopen & isopen1 ? <div className="my-5">
+                                            //     <p className="position-absolute  text-black " style={{ left: "49.2%", transform: "translateX(-50%)", top: "27.5%", transform: "translateY(-50%)" }}>OR</p>
+                                            //     <hr className="position-relative" />
+                                            // </div> : ""
+
+                                            isopen1 && isopen ?
+                                                <div className="account__login--divide">
+                                                    <span className="account__login--divide__text">OR</span>
+                                                </div> : ""
                                         }
 
                                         <div className="form-group">
@@ -152,7 +158,7 @@ export default function RegisterForm() {
                                         <div className="box-button-logins">
                                             <a className="btn btn-login btn-google mr-10" href="#">
                                                 <img src="/assets/img/icons/google.svg" alt="Carento" />
-                                                <span className="text-sm-bold">Sign up with Google</span>
+                                                <span className="text-sm-bold d-none d-md-block">Sign up with Google</span>
                                             </a>
                                             <a className="btn btn-login mr-10" href="#">
                                                 <img src="/assets/img/icons/facebook.svg" alt="Carento" />
@@ -161,7 +167,7 @@ export default function RegisterForm() {
                                                 <img src="/assets/img/icons/apple.svg" alt="Carento" />
                                             </a>
                                         </div>
-                                        <p className="login__subtext text-center">Don’t have an account? <a className="neutral-1000" href="/login"> Login Here !</a>
+                                        <p className="login__subtext text-center">Don’t have an account? <Link className="neutral-1000" href="/login"> Login Here !</Link>
                                         </p>
                                     </form>
                                 </div>

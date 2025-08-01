@@ -21,6 +21,8 @@ import { IoMdHeartEmpty } from "react-icons/io";
 import { BsHeart, BsHeartFill } from 'react-icons/bs';
 import { findCategoryById } from '@/utils/helpers';
 import { motion } from 'framer-motion';
+import NotFound from '@/app/not-found';
+import NoDataFound from '@/utils/NoDataFound';
 export default function ShopList() {
     const dispatch = useDispatch();
     const router = useRouter();
@@ -57,6 +59,9 @@ export default function ShopList() {
     const [trifOpen, setTrifOpen] = useState(true);
     const [expanded, setExpanded] = useState(false);
 
+    if (!cate) {
+        return <div><NotFound /></div>; // or return a loading image
+    }
 
     const currentCategoryId = params ? params[params.length - 1] : null;
     const subCategory = findCategoryById(categories, currentCategoryId);
@@ -126,6 +131,7 @@ export default function ShopList() {
         });
     }, []);
     const fetchCategoriesList = (customOffset = offset, isFilter = false) => {
+        setLoader(true);
         const data = {
             [cate]: cate_name,
             // offset: offset,
@@ -141,6 +147,7 @@ export default function ShopList() {
         console.log(data, "data of fetchCategoriesList");
 
         Product(data).then((res) => {
+            setLoader(false);
             if (res.success === true) {
                 const fetchedData = res?.data || [];
 
@@ -165,7 +172,12 @@ export default function ShopList() {
                     setHasMore(true);
                 }
             } else {
-                router.push("*");
+                setLoader(false);
+
+                // console.log("No categories found.");
+
+                // <p>No categories found.</p>;
+                // router.push("*");
             }
         }).catch((e) => {
             console.error(e);
@@ -196,6 +208,7 @@ export default function ShopList() {
         setOffset(0);
         setCurrentItems([]);
         setHasMore(true);
+        setIsOpen(false);
 
         // Use a timeout or callback to ensure state is updated before fetching
         fetchCategoriesList(0, true);
@@ -209,16 +222,28 @@ export default function ShopList() {
         setHasMore(true);
         fetchCategoriesList(0, true);
     }
+    const handleResetFilter = () => {
+        setOrigin(null);
+        setCompany(null);
+        setStPrice(null);
+        setEndPrice(null);
+        // setOffset(0);
+        setCurrentItems([]);
+        setHasMore(true);
+        setIsOpen(false);
+
+        fetchCategoriesList(0, true);
+    }
     const handleChange = (panel) => (event, isExpanded) => {
         setExpanded(isExpanded ? panel : false);
     };
     const toggleDrawer = () => {
-        setIsOpen((prevState) => !prevState)
-    }
+        setIsOpen((prevState) => !prevState);
+    };
 
     return (
-        <div>
-            <div className="shop-list-header">
+        <div className=''>
+            <div className="shop-list-header  d-none d-md-block">
                 <div className="custom-container position-relative mx-auto">
                     <div className="bg-overlay rounded-4 overflow-hidden">
                         <img src="/assets/img/pageHeader/banner1.png" alt="Carento" />
@@ -249,8 +274,13 @@ export default function ShopList() {
                 <div className="container">
                     <div className="row align-items-end">
                         <div className="col-md-9 mb-30 ">
-                            <h4 className="shop-list-header__title">Latest Products</h4>
-                            <p className="shop-list-header__subtitle">Experience The Best Car Services In Carento</p>
+                            <div className="d-block d-md-none">
+                                <Breadcrumbs />
+                            </div>
+                            <div>
+                                <h4 className="shop-list-header__title">Latest Products</h4>
+                                <p className="text-[18px] text-bold neutral-500 ">Experience The Best Car Services In Carento</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -288,7 +318,7 @@ export default function ShopList() {
                                             >
                                                 <TfiMenuAlt style={{ color: "black" }} />
                                             </button>
-                                            <span className="shop-list-toolbar__result-count">64 items found</span>
+                                            {/* <span className="shop-list-toolbar__result-count">64 items found</span> */}
                                         </div>
                                     </div>
                                     <div className="shop-list-toolbar__right col-xl-8 col-md-8 mb-10 text-lg-end text-center">
@@ -332,201 +362,221 @@ export default function ShopList() {
                                                     </select>
                                                 </div>
                                             </div>
+                                            <button
+                                                onClick={toggleDrawer}
+                                                className="d-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black border border-gray-300 shadow-sm hover:shadow-md hover:bg-gray-100 transition-all duration-200 d-block d-lg-none"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 13.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-3.586L3.293 6.707A1 1 0 013 6V4z" />
+                                                </svg>
+                                                <span className="font-medium text-[12px]">Filter</span>
+                                            </button>
 
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div className="shop-list-products">
-                                <InfiniteScroll
-                                    style={{ overflow: "hidden" }}
-                                    dataLength={currentItems.length}
-                                    next={() => fetchCategoriesList(offset)}  // ✅ Correctly controlled call
-                                    hasMore={hasmore}
-                                    endMessage={
-                                        <p style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
-                                            Yay! You have seen it all
-                                        </p>
-                                    }
-                                    loader={
-                                        <h4 style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
-                                            Loading...
-                                        </h4>
-                                    }
-                                >
-                                    {
-                                        gridOpen ? (
-                                            <>
-                                                <div className="row">
-                                                    {currentItems && currentItems?.map((e, index) => {
-                                                        return (
-                                                            <div key={index} className="col-lg-4 col-md-6">
-                                                                <div
+                                {loader && currentItems.length === 0 ? (
+                                    // Initial loading
+                                    <h4 style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
+                                        Loading...
+                                    </h4>
+                                ) : currentItems.length === 0 ? (
+                                    // Empty state
+                                    <div className="text-center text-muted fw-bold text-black">
+                                        <NoDataFound />
+                                    </div>
+                                ) : (
+                                    <InfiniteScroll
+                                        style={{ overflow: "hidden" }}
+                                        dataLength={currentItems.length}
+                                        next={() => fetchCategoriesList(offset)}  // ✅ Correctly controlled call
+                                        hasMore={hasmore}
+                                        endMessage={
+                                            <p style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
+                                                Yay! You have seen it all
+                                            </p>
+                                        }
+                                        loader={
+                                            <h4 style={{ textAlign: "center", marginTop: "20px", fontWeight: "bold" }}>
+                                                Loading...
+                                            </h4>
+                                        }
+                                    >
+                                        {
+                                            gridOpen ? (
+                                                <>
+                                                    <div className="row">
+                                                        {currentItems && currentItems?.map((e, index) => {
+                                                            return (
+                                                                <div key={index} className="col-lg-4 col-md-6">
+                                                                    <div
 
-                                                                    className="shop-list-products__card">
-                                                                    <motion.div
-                                                                        initial={{
-                                                                            opacity: 0, y: 100
-                                                                        }}
-                                                                        animate={{
-                                                                            opacity: 1, y: 0
-                                                                        }}
-                                                                        transition={{
-                                                                            duration: 1,
-                                                                            delay: 0
-                                                                        }}
-                                                                        className="shop-list-products__image">
-                                                                        {
-                                                                            user?.success === true ? (
-                                                                                <>
-                                                                                    {productwishIdsArray.includes(e?.id) ? (
-                                                                                        <span className="shop-list-products__wishlist">
-                                                                                            <BsHeartFill
-                                                                                                style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
-                                                                                                onClick={() => removeElement(e?.id)}
-                                                                                            />
-                                                                                        </span>
-                                                                                    ) : (
-                                                                                        <span className="shop-list-products__wishlist">
-                                                                                            <IoMdHeartEmpty
-                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                                                onClick={() => handleWish(e?.id)}
-                                                                                            />
-                                                                                        </span>
-                                                                                    )}
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <a href="/login" rel="noopener noreferrer">
-                                                                                        <span className="shop-list-products__wishlist">
-                                                                                            <IoMdHeartEmpty
-                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                                                className='text-black'
-                                                                                            />
-                                                                                        </span>
-                                                                                    </a>
-                                                                                </>
-                                                                            )
-                                                                        }
-                                                                        {/* <span className="shop-list-products__wishlist">
+                                                                        className="shop-list-products__card">
+                                                                        <motion.div
+                                                                            initial={{
+                                                                                opacity: 0, y: 100
+                                                                            }}
+                                                                            animate={{
+                                                                                opacity: 1, y: 0
+                                                                            }}
+                                                                            transition={{
+                                                                                duration: 1,
+                                                                                delay: 0
+                                                                            }}
+                                                                            className="shop-list-products__image">
+                                                                            {
+                                                                                user?.success === true ? (
+                                                                                    <>
+                                                                                        {productwishIdsArray.includes(e?.id) ? (
+                                                                                            <span className="shop-list-products__wishlist">
+                                                                                                <BsHeartFill
+                                                                                                    style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
+                                                                                                    onClick={() => removeElement(e?.id)}
+                                                                                                />
+                                                                                            </span>
+                                                                                        ) : (
+                                                                                            <span className="shop-list-products__wishlist">
+                                                                                                <IoMdHeartEmpty
+                                                                                                    style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                    onClick={() => handleWish(e?.id)}
+                                                                                                />
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <a href="/login" rel="noopener noreferrer">
+                                                                                            <span className="shop-list-products__wishlist">
+                                                                                                <IoMdHeartEmpty
+                                                                                                    style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                    className='text-black'
+                                                                                                />
+                                                                                            </span>
+                                                                                        </a>
+                                                                                    </>
+                                                                                )
+                                                                            }
+                                                                            {/* <span className="shop-list-products__wishlist">
                                                                             <IoMdHeartEmpty className='text-black' style={{ color: "black" }} />
                                                                         </span> */}
-                                                                        <img
-                                                                            src={e?.image}
-                                                                            alt="Carento"
-                                                                        />
-                                                                    </motion.div>
-                                                                    <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
-                                                                        <div className="shop-list-products__info">
-                                                                            {/* <div className="shop-list-products__rating">
+                                                                            <img
+                                                                                src={e?.image}
+                                                                                alt="Carento"
+                                                                            />
+                                                                        </motion.div>
+                                                                        <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
+                                                                            <div className="shop-list-products__info">
+                                                                                {/* <div className="shop-list-products__rating">
                                                                             <span className="shop-list-products__rating-value">
                                                                                 4.9 5 <span className="text-xs-medium neutral-500">(672 reviews)</span>
                                                                             </span>
                                                                         </div>   */}
-                                                                            <div className="shop-list-products__title">
-                                                                                <span href="/shop-details">
-                                                                                    {/* {e.Description} */}
-                                                                                    <br></br>
-                                                                                    {e?.name}
-                                                                                </span>
+                                                                                <div className="shop-list-products__title">
+                                                                                    <span href="/shop-details">
+                                                                                        {/* {e.Description} */}
+                                                                                        <br></br>
+                                                                                        {e?.name}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="shop-list-products__old-price">
+                                                                                    <h6>45</h6>
+                                                                                    <span href="#"><img src="/assets/img/shop-list/stock.png" alt="Carento" /></span>
+                                                                                </div>
+                                                                                <div className="shop-list-products__bottom">
+                                                                                    <h6 className="shop-list-products__price">{e?.price}</h6>
+                                                                                    {/* <a className="" href={`/productsdetail/${e?.id}/${e?.PN}`}>View Details</a> */}
+                                                                                    <button>
+                                                                                        View Details
+                                                                                    </button>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="shop-list-products__old-price">
-                                                                                <h6>45</h6>
-                                                                                <span href="#"><img src="/assets/img/shop-list/stock.png" alt="Carento" /></span>
+                                                                        </Link>
+                                                                    </div>
+                                                                </div>
+                                                            )
+                                                        })}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <div className="row">
+                                                        {currentItems?.map((e, index) => (
+                                                            <div key={index} className="col-xl-12 col-lg-12">
+                                                                <div className="car-list-card d-flex align-items-center position-relative">
+                                                                    <div className="car-list-card__image">
+                                                                        <img src={e?.image} alt={e?.name} />
+                                                                    </div>
+                                                                    <div className="car-list-card__content">
+                                                                        <div className="shop-list-products__rating">
+                                                                            {/* <span className="shop-list-products__rating-value"> */}
+                                                                            {/* 4.9 5 <span className="text-xs-medium neutral-500">(672 reviews)</span> */}
+                                                                            {/* <BsHeart /> */}
+                                                                            {/* </span> */}
+                                                                            {
+                                                                                user?.success === true ? (
+                                                                                    <>
+                                                                                        {productwishIdsArray.includes(e?.id) ? (
+                                                                                            <span className="shop-list-products__rating-value">
+                                                                                                <BsHeartFill
+                                                                                                    style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
+                                                                                                    onClick={() => removeElement(e?.id)}
+                                                                                                />
+                                                                                            </span>
+                                                                                        ) : (
+                                                                                            <span className="shop-list-products__rating-value">
+                                                                                                <IoMdHeartEmpty
+                                                                                                    style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                    onClick={() => handleWish(e?.id)}
+                                                                                                />
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </>
+                                                                                ) : (
+                                                                                    <>
+                                                                                        <a href="/login" rel="noopener noreferrer">
+                                                                                            <span className="shop-list-products__rating-value">
+                                                                                                <IoMdHeartEmpty
+                                                                                                    // style={{ cursor: "pointer", fontSize: "20px" }}
+                                                                                                    className='text-black' style={{ color: "black" }}
+                                                                                                />
+                                                                                            </span>
+                                                                                        </a>
+                                                                                    </>
+                                                                                )
+                                                                            }
+                                                                        </div>
+                                                                        <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
+                                                                            <div className="car-list-card__top d-flex justify-content-between">
+                                                                                <div>
+                                                                                    <h4 className='text-black'>{e?.name}</h4>
+                                                                                    <p className="location">📍 Manchester, England</p>
+                                                                                </div>
                                                                             </div>
-                                                                            <div className="shop-list-products__bottom">
-                                                                                <h6 className="shop-list-products__price">{e?.price}</h6>
-                                                                                {/* <a className="" href={`/productsdetail/${e?.id}/${e?.PN}`}>View Details</a> */}
+                                                                            <div className="features d-flex flex-wrap">
+                                                                            </div>
+                                                                            <div className="car-list-card__bottom d-flex justify-content-between align-items-center">
+                                                                                {/* <h3 className="price">${e?.price} <span>/ night</span></h3> */}
+                                                                                <h6 className="shop-list-products__price">{e?.price}/-</h6>
                                                                                 <button>
                                                                                     View Details
                                                                                 </button>
+                                                                                {/* <a className="btn btn-gray" href="/shop-details">View Details</a> */}
 
                                                                             </div>
-                                                                        </div>
-                                                                    </Link>
-                                                                </div>
-                                                            </div>
-                                                        )
-                                                    })}
-                                                </div>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <div className="row">
-                                                    {currentItems?.map((e, index) => (
-                                                        <div key={index} className="col-xl-12 col-lg-12">
-                                                            <div className="car-list-card d-flex align-items-center position-relative">
-                                                                <div className="car-list-card__image">
-                                                                    <img src={e?.image} alt={e?.name} />
-                                                                </div>
-                                                                <div className="car-list-card__content">
-                                                                    <div className="shop-list-products__rating">
-                                                                        {/* <span className="shop-list-products__rating-value"> */}
-                                                                        {/* 4.9 5 <span className="text-xs-medium neutral-500">(672 reviews)</span> */}
-                                                                        {/* <BsHeart /> */}
-                                                                        {/* </span> */}
-                                                                        {
-                                                                            user?.success === true ? (
-                                                                                <>
-                                                                                    {productwishIdsArray.includes(e?.id) ? (
-                                                                                        <span className="shop-list-products__rating-value">
-                                                                                            <BsHeartFill
-                                                                                                style={{ cursor: "pointer", fontSize: "20px", color: "black" }}
-                                                                                                onClick={() => removeElement(e?.id)}
-                                                                                            />
-                                                                                        </span>
-                                                                                    ) : (
-                                                                                        <span className="shop-list-products__rating-value">
-                                                                                            <IoMdHeartEmpty
-                                                                                                style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                                                onClick={() => handleWish(e?.id)}
-                                                                                            />
-                                                                                        </span>
-                                                                                    )}
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <a href="/login" rel="noopener noreferrer">
-                                                                                        <span className="shop-list-products__rating-value">
-                                                                                            <IoMdHeartEmpty
-                                                                                                // style={{ cursor: "pointer", fontSize: "20px" }}
-                                                                                                className='text-black' style={{ color: "black" }}
-                                                                                            />
-                                                                                        </span>
-                                                                                    </a>
-                                                                                </>
-                                                                            )
-                                                                        }
+                                                                        </Link>
                                                                     </div>
-                                                                    <Link href={`/productsdetail/${e?.id}/${e?.PN}`}>
-                                                                        <div className="car-list-card__top d-flex justify-content-between">
-                                                                            <div>
-                                                                                <h4 className='text-black'>{e?.name}</h4>
-                                                                                <p className="location">📍 Manchester, England</p>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div className="features d-flex flex-wrap">
-                                                                        </div>
-                                                                        <div className="car-list-card__bottom d-flex justify-content-between align-items-center">
-                                                                            {/* <h3 className="price">${e?.price} <span>/ night</span></h3> */}
-                                                                            <h6 className="shop-list-products__price">{e?.price}/-</h6>
-                                                                            <button>
-                                                                                View Details
-                                                                            </button>
-                                                                            {/* <a className="btn btn-gray" href="/shop-details">View Details</a> */}
-
-                                                                        </div>
-                                                                    </Link>
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                                        ))}
+                                                    </div>
 
-                                            </>
-                                        )
-                                    }
-                                </InfiniteScroll>
+                                                </>
+                                            )
+                                        }
+                                    </InfiniteScroll>
+                                )}
                             </div>
 
 
@@ -539,7 +589,7 @@ export default function ShopList() {
                                         <h2 className='text-black'>Filters</h2>
                                         <a
                                             // onClick={handleReset}
-                                            // onClick={() => handleResetFilter()}
+                                            onClick={() => handleResetFilter()}
                                             className="ms-5 mt-1"
                                             style={{ textDecoration: "underline", color: "red" }}
                                         >
@@ -701,70 +751,72 @@ export default function ShopList() {
             <Drawer
                 open={isOpen}
                 onClose={toggleDrawer}
+
                 direction='left'
                 className='bla bla bla'
+                style={{ zIndex: 9999 }}
             >
                 <div className="single__widget price__filter widget__bg ">
                     <div className="d-flex justify-content-between">
-                        <h2>Filters</h2>
+                        <h2 className='text-black'>Filters</h2>
                         <a
                             // onClick={handleReset}
-                            // onClick={() => handleResetFilter()}
+                            onClick={() => handleResetFilter()}
                             className="ms-5 mt-1"
                             style={{ textDecoration: "underline", color: "red" }}
                         >
                             Reset
                         </a>
                     </div>
-                    {/* <div className="filter-box"> */}
-                    <form onSubmit={handleFinalFilterClick}>
-                        {/* Origin Section */}
-                        <div className="filter-section">
-                            <h6 className="filter-title">Origin</h6>
-                            <label className="radio-label">
-                                <input type="radio" name="origin" checked={origin === 'oem'} onChange={() => setOrigin('oem')} />
-                                <span>OEM</span>
-                            </label>
-                            <select name="carMaker" className="vehicle-select"
-                                onChange={(e) => setCompany(e.target.value)}
-                                value={company || ""}
-                            >
-                                <option selected value={""}>Choose Car Maker</option>
-                                {carName.map((e, index) => {
-                                    return (
-                                        <option value={e?.id} key={index}  >
-                                            {e?.name}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                        </div>
+                    <div className="">
+                        <form onSubmit={handleFinalFilterClick}>
+                            {/* Origin Section */}
+                            <div className="filter-section">
+                                <h6 className="filter-title">Origin</h6>
+                                <label className="radio-label">
+                                    <input type="radio" name="origin" checked={origin === 'oem'} onChange={() => setOrigin('oem')} />
+                                    <span>OEM</span>
+                                </label>
+                                <select name="carMaker" className="vehicle-select"
+                                    onChange={(e) => setCompany(e.target.value)}
+                                    value={company || ""}
+                                >
+                                    <option selected value={""}>Choose Car Maker</option>
+                                    {carName.map((e, index) => {
+                                        return (
+                                            <option value={e?.id} key={index}  >
+                                                {e?.name}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
 
-                        {/* Price Section */}
-                        <div className="filter-section">
-                            <h6 className="filter-title">Price</h6>
-                            <div className="price-range">
-                                <div className="price-input">
-                                    <span>From</span>
-                                    <input type="number" placeholder="0"
-                                        value={Stprice || ""}
-                                        onChange={(e) => setStPrice(e.target.value)}
-                                    />
-                                </div>
-                                <div className="price-input">
-                                    <span>To</span>
-                                    <input type="number" placeholder="250"
-                                        value={endPrice || ""}
-                                        onChange={(e) => setEndPrice(e.target.value)}
-                                    />
+                            {/* Price Section */}
+                            <div className="filter-section">
+                                <h6 className="filter-title">Price</h6>
+                                <div className="price-range">
+                                    <div className="price-input">
+                                        <span>From</span>
+                                        <input type="number" placeholder="0"
+                                            value={Stprice || ""}
+                                            onChange={(e) => setStPrice(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="price-input">
+                                        <span>To</span>
+                                        <input type="number" placeholder="250"
+                                            value={endPrice || ""}
+                                            onChange={(e) => setEndPrice(e.target.value)}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className="filter-button">
-                            <button >Filter</button>
-                        </div>
-                    </form>
-                    {/* </div> */}
+                            <div className="filter-button">
+                                <button >Filter</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
 
             </Drawer>

@@ -1,16 +1,23 @@
-'use client'
+
+// bootstrap
 import "bootstrap/dist/css/bootstrap.min.css";
 
+// custom style 
 import "./globals.css";
-import 'swiper/css';
+
+// Third-Party Libraries
+import NextTopLoader from 'nextjs-toploader';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import 'react-modern-drawer/dist/index.css'
-import ReduxProvider from './providers';
+import 'react-modern-drawer/dist/index.css';
+import 'swiper/css';
+import 'nprogress/nprogress.css';
 
+import ReduxProvider from './providers';
 import ClientLayout from "@/components/ClientLayout";
-import ScrollToTop from "react-scroll-to-top";
 import ProtectedLayout from "@/utils/ProtectedLayout";
+import ScrollToTopButton from "@/utils/ScrollToTop";
+import SupportPage from "@/utils/SupportPage";
 
 
 export default function RootLayout({ children }) {
@@ -25,8 +32,15 @@ export default function RootLayout({ children }) {
         <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
       </head>
       <body>
+        <NextTopLoader
+          color="linear-gradient(to right, rgb(236, 72, 153), rgb(239, 68, 68), rgb(234, 179, 8))"
+          height={3}
+          speed={800}
+          showSpinner={false}
+        />
         <ReduxProvider>
-          <ScrollToTop smooth />
+          <ScrollToTopButton />
+          <SupportPage />
           <ClientLayout>
             <ProtectedLayout>
               {children}
@@ -36,6 +50,5 @@ export default function RootLayout({ children }) {
         </ReduxProvider>
       </body>
     </html>
-
   );
 }

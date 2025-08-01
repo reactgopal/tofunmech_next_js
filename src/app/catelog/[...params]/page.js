@@ -76,8 +76,8 @@ const CatelogPage = () => {
     }
 
     return (
-        <div>
-            <div className="shop-list-header">
+        <div className="">
+            <div className="shop-list-header d-none d-md-block">
                 <div className="custom-container position-relative mx-auto">
                     <div className="bg-overlay rounded-4 overflow-hidden">
                         <img src="/assets/img/pageHeader/banner1.png" alt="Carento" />
@@ -91,15 +91,6 @@ const CatelogPage = () => {
                         </h2>
                     </div>
                     <div className="shop-list__breadcrumb navigation-page">
-                        {/* <a className="neutral-700 text-md-medium" href="/">Home</a>
-                        <span className="@@ds-prev-page">
-                            <img src="/assets/img/icons/arrow-right.svg" alt="Carento" />
-                        </span>
-                        <a className="neutral-1000 text-md-bold" href="#">Shop</a>
-                        <span>
-                            <img src="/assets/img/icons/arrow-right.svg" alt="Carento" />
-                        </span>
-                        <a className="neutral-1000 text-md-bold text-nowrap" href="#">All items</a> */}
                         <Breadcrumbs />
                     </div>
                 </div>
@@ -108,8 +99,13 @@ const CatelogPage = () => {
                 <div className="container">
                     <div className="row align-items-end">
                         <div className="col-md-9 mb-30 ">
-                            <h4 className="shop-list-header__title">Latest Products</h4>
-                            <p className="shop-list-header__subtitle">Experience The Best Car Services In Carento</p>
+                            <div className="d-block d-md-none">
+                                <Breadcrumbs />
+                            </div>
+                            <div>
+                                <h4 className="shop-list-header__title">Latest Products</h4>
+                                <p className="text-[18px] text-bold neutral-500 ">Experience The Best Car Services In Carento</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -117,15 +113,15 @@ const CatelogPage = () => {
             {/* shop list section */}
             <section className="shop-list-box-section ">
                 <div className="container">
-                    <div className="box-content-main pt-4">
+                    <div className="box-content-main shop-list-section--padding">
                         <div className="content-right">
                             <div className="shop-list-toolbar p-0">
                                 <div className="row align-items-center">
                                     <div className="shop-list-toolbar__left col-xl-4 col-md-4 mb-10 text-lg-start text-center">
-                                        <div className="shop-list-toolbar__view-options section__heading">
+                                        <div className="shop-list-toolbar__view-options">
                                             <motion.div
-                                                className="shop-list-category__view-title"
-                                                style={{ marginLeft: "35px" }}
+                                                className="section__heading"
+                                            // style={{ marginLeft: "35px" }}
                                             >
                                                 {
                                                     words.map((word, index) => (
@@ -134,40 +130,78 @@ const CatelogPage = () => {
                                                             animate={{ filter: "blur(0)", opacity: 1, y: 0 }}
                                                             transition={{ duration: 0.5, delay: 0.1 * index }}
                                                             key={index}
-                                                            className="shop-list-category__view-title me-1 ">
+                                                            className="shop-list-category__view-title me-1 h2 ">
                                                             {word}
                                                         </motion.h2>
                                                     ))
                                                 }
                                             </motion.div>
-                                            <button className="btn d-block d-lg-none" onClick={toggleDrawer}>Filter</button>
-
-                                            {/* <button
-                                                className="shop-list-toolbar__view-icon"
-                                                aria-label="grid btn"
-                                                data-toggle="tab"
-                                                data-target="#product_grid"
-                                                title="Grid"
-                                            >
-                                                <CgMenuGridR style={{ color: "black" }} />
-                                            </button>
+                                            {/* <button className="btn d-block d-lg-none " onClick={toggleDrawer}>Filter</button> */}
                                             <button
-                                                className="shop-list-toolbar__view-icon"
-                                                aria-label="list btn"
-                                                data-toggle="tab"
-                                                data-target="#product_list"
-                                                title="List"
+                                                onClick={toggleDrawer}
+                                                className="d-flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black border border-gray-300 shadow-sm hover:shadow-md hover:bg-gray-100 transition-all duration-200 d-block d-lg-none"
                                             >
-                                                <TfiMenuAlt style={{ color: "black" }} />
-                                            </button> */}
-                                            {/* <span className="shop-list-toolbar__result-count">64 items found</span> */}
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L15 13.414V19a1 1 0 01-1.447.894l-4-2A1 1 0 019 17v-3.586L3.293 6.707A1 1 0 013 6V4z" />
+                                                </svg>
+                                                <span className="font-medium text-[12px]">Filter</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="shop-list-products">
-                                <div className="row">
+                            <div className="">
+                                <ul className="categories__shop--inner">
                                     {subCategory?.children?.length > 0 ? (
+                                        subCategory.children.map((item, index) => {
+                                            const newPath = `/catelog/${params.join("/")}/${item.id}`;
+                                            const cateLevel = params.length + 1;
+                                            const cateParam = cateLevel === 2 ? "cate2" : "cate3";
+
+                                            // Determine final href
+                                            const href = item.children?.length > 0
+                                                ? newPath
+                                                : `/shop/${item.name}?cate=${cateParam}`;
+
+                                            return (
+                                                <li
+                                                    className="categories__shop--card"
+                                                    key={index}
+                                                >
+                                                    <motion.div className="box">
+                                                        <Link href={href} className="categories__shop--card__link" style={{ cursor: "pointer", display: "block" }}>
+                                                            {/* <div className="category-products__image new_img_height">
+                                                            <img src={item.image} alt={item.name} />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <div className="categories__content--title">
+                                                                {item.name}
+                                                            </div>
+                                                        </div> */}
+
+                                                            <div className="categories__thumbnail new_img_height">
+                                                                <img
+                                                                    className="categories__thumbnail--img"
+                                                                    src={item?.image ? item?.image : Placeholder_view}
+                                                                    alt="categories-img"
+                                                                    loading="lazy"
+                                                                />
+                                                            </div>
+                                                            <div className="categories__content">
+                                                                <h2 className="categories__content--title">
+                                                                    {item?.name}
+                                                                    {/* {e?.Description} */}
+                                                                </h2>
+                                                            </div>
+                                                        </Link>
+                                                    </motion.div>
+                                                </li>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="mt-4 text-gray-600">No subcategories</p>
+                                    )}
+                                    {/* {subCategory?.children?.length > 0 ? (
                                         subCategory.children.map((item) => {
                                             const newPath = `/catelog/${params.join("/")}/${item.id}`;
                                             const cateLevel = params.length + 1;
@@ -180,7 +214,6 @@ const CatelogPage = () => {
                                                     router.push(`/shop/${item.name}?cate=${cateParam}`);
                                                 }
                                             };
-
                                             return (
                                                 <div key={item.id} className="col-lg-3 col-md-6">
                                                     <div
@@ -202,8 +235,8 @@ const CatelogPage = () => {
                                         })
                                     ) : (
                                         <p className="mt-4 text-gray-600">No subcategories</p>
-                                    )}
-                                </div>
+                                    )} */}
+                                </ul>
 
                                 {/* <div className="row">
                                     {subCategory?.children?.length > 0 ? (
@@ -360,7 +393,7 @@ const CatelogPage = () => {
                 onClose={toggleDrawer}
                 direction='left'
                 className='bla bla bla'
-                style={{ zIndex: 999 }}
+                style={{ zIndex: 1000 }}
 
             >
                 <ul className="widget__categories--menu" style={{ height: "100vh", overflowY: "scroll" }}>
