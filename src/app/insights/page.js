@@ -1,6 +1,6 @@
 export default function page() {
     return (
-        <div>
+        <div className="margin_top_all">
             <h1>
                 Server Error
             </h1>

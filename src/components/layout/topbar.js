@@ -3,7 +3,6 @@ import Link from "next/link";
 import { AiOutlineHeart } from 'react-icons/ai'
 import { BiLogoFacebook, BiLogoInstagramAlt, BiLogoPinterest, BiLogoTwitter, BiLogoYoutube } from 'react-icons/bi'
 import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 export default function Topbar() {
     const pathname = usePathname();
     // const isHomePage = pathname === "/";
@@ -16,7 +15,7 @@ export default function Topbar() {
     // }, [pathname]);
     return (
 
-        <div className="topbar header__section">
+        <div className="topbar">
             <div className="header__topbar" style={{ backgroundColor: bgColor }}>
                 <div className="container-fluid">
                     <div className="header__topbar--inner d-flex align-items-center justify-content-between">

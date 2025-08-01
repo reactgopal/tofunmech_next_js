@@ -1,28 +1,20 @@
 'use client'
 import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import PageBreadcrumb from "@/utils/PageBreadcrumbs";
 
 const PrivacyPolicy = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, [])
     return (
-        <>
-            <main className="margin_top_all">
-                {/* <Breadcrumb
-                    subTitle2="Privacy Policy"
-                    icon2={
-                        <MdPrivacyTip
-                            color="#363062"
-                            style={{
-                                fontSize: "22px",
-                                marginRight: "4px",
-                                boxSizing: "border-box",
-                                cursor: "pointer",
-                            }}
-                        />
-                    }
-                /> */}
+        <div className="margin_top_all">
+            <div className="breadcrumb-section breadcrumb__bg">
+                <div className="container">
+                    <PageBreadcrumb />
+                </div>
+            </div>
+            <main className="">
                 {/* Start privacy policy section */}
                 <motion.div
                     initial={{ opacity: 0, x: "-100vw" }}
@@ -166,7 +158,8 @@ const PrivacyPolicy = () => {
                     </div>
                 </motion.div>
             </main>
-        </>
+        </div>
+
     );
 };
 

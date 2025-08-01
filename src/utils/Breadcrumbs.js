@@ -93,41 +93,24 @@ const Breadcrumbs = () => {
 
 
     return (
-        // <nav aria-label="breadcrumb" className="text-sm text-gray-600 my-4">
-        //     <ol className="flex flex-wrap items-center space-x-1">
-        //         {crumbs.map((crumb, index) => (
-        //             <li key={index} className="flex items-center">
-        //                 {index > 0 && <span className="mx-1">/</span>}
-        //                 {crumb.href ? (
-        //                     <Link href={crumb.href} className="text-blue-600 hover:underline text-black">
-        //                         {crumb.label}
-        //                     </Link>
-        //                 ) : (
-        //                     <span className="font-medium text-gray-900 text-black">{crumb.label}</span>
-        //                 )}
-        //             </li>
-        //         ))}
-        //     </ol>
-        // </nav>
-        <nav aria-label="breadcrumb" className="text-md text-gray-600 my-4">
-            <ul className="flex flex-wrap items-center space-x-1">
+        <nav aria-label="breadcrumb" className="breadcrumb-nav">
+            <ul className="breadcrumb-list">
                 {crumbs.map((crumb, index) => (
-                    <li key={index} className="flex items-center">
+                    <li key={index} className="breadcrumb-item">
                         {index > 0 && <span className="mx-1"> <MdOutlineKeyboardArrowRight /></span>}
                         {crumb.href && index < crumbs.length - 1 ? (
-                            <Link href={crumb.href} className="text-blue-100 hover:underline text-black">
+                            <Link href={crumb.href} className="breadcrumb-link">
                                 {crumb.label}
 
                             </Link>
                         ) : (
-                            <span className="font-large text-gray-900 fw-bold text-black">{crumb.label}</span>
+                            <span className="breadcrumb-current">{crumb.label}</span>
                         )}
                     </li>
                 ))}
             </ul>
         </nav>
-
-    );      
+    );
 };
 
 export default Breadcrumbs;

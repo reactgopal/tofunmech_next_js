@@ -1,16 +1,21 @@
 'use client'
 import { useRouter } from 'next/navigation'
 
-import { LogIn } from "@/api/services/apiServices";
+import { Add_To_cart_Login, LogIn } from "@/api/services/apiServices";
 import { useEffect, useState } from "react";
 import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
+import { addLoginCart, removeAllAddtocart } from '@/store/reducers/ProductSlice';
+import Link from 'next/link';
 
 export default function Login() {
-
+    const dispatch = useDispatch();
     const router = useRouter();
     const [emailNumber, setEmailNumber] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const guestCart = useSelector((state) => state.products.addto_cart); // 👈 guest cart
+    console.log(guestCart, "guestCart");
     useEffect(() => {
         const user = localStorage.getItem('USER');
         if (user) {
@@ -18,25 +23,60 @@ export default function Login() {
         }
     }, []);
 
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+    //     let data = {
+    //         username: emailNumber,
+    //         password: password
+    //     }
+    //     LogIn(data).then((res) => {
+    //         if (res.success) {
+    //             localStorage.setItem("USER", JSON.stringify(res));
+    //             toast.success(res.message);
+    //             router.push("/");
+    //         } else {
+    //             setError(res.message);
+    //             // toast.error(res.message || "Your are not login");
+    //             toast.error(res.message);
+    //         }
+    //     })
+    // }
     const handleSubmit = (e) => {
         e.preventDefault();
-        let data = {
+        const data = {
             username: emailNumber,
-            password: password
-        }
-        LogIn(data).then((res) => {
+            password: password,
+        };
+
+        LogIn(data).then(async (res) => {
             if (res.success) {
                 localStorage.setItem("USER", JSON.stringify(res));
                 toast.success(res.message);
-                router.push("/");
 
+                // 🔥 Merge guest cart
+                if (guestCart.length > 0) {
+                    try {
+                        const fixedCart = guestCart.map(item => ({
+                            ...item,
+                            id: item.proId,
+                        }));
+                        await Add_To_cart_Login(fixedCart);
+                        dispatch(addLoginCart(fixedCart));
+                        dispatch(removeAllAddtocart());
+                    } catch (err) {
+                        console.error("Cart merge error:", err);
+                    }
+                }
+
+                router.push("/");
             } else {
                 setError(res.message);
-                // toast.error(res.message || "Your are not login");
                 toast.error(res.message);
             }
-        })
-    }
+        });
+    };
+
+
     return (
         <div className="section--padding">
             <div className="container">
@@ -83,7 +123,7 @@ export default function Login() {
                                         <div className="box-button-logins">
                                             <a className="btn btn-login btn-google mr-10" href="#">
                                                 <img src="/assets/img/icons/google.svg" alt="Carento" />
-                                                <span className="text-sm-bold"> Sign up with Google</span>
+                                                <span className="text-sm-bold d-none d-md-block"> Sign up with Google</span>
                                             </a>
                                             <a className="btn btn-login mr-10" href="#">
                                                 <img src="/assets/img/icons/facebook.svg" alt="Carento" />
@@ -92,7 +132,7 @@ export default function Login() {
                                                 <img src="/assets/img/icons/apple.svg" alt="Carento" />
                                             </a>
                                         </div>
-                                        <p className="login__subtext text-center">Don’t have an account? <a className="neutral-1000" href="/register"> Register Here !</a>
+                                        <p className="login__subtext text-center">Don’t have an account? <Link className="neutral-1000" href="/register"> Register Here !</Link>
                                         </p>
 
                                     </form>

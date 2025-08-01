@@ -30,7 +30,7 @@ export default function Searchvehicle() {
     const [open, setOpen] = useState(false);
     const [number, setnumber] = useState("");
     const [openWindow, setopenWindow] = useState(false);
-    
+
     useEffect(() => {
         CarCompanies().then((res) => {
             setCarCompanies(res?.data);

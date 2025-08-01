@@ -11,6 +11,7 @@ import { IoCloseSharp } from "react-icons/io5";
 import { Box, Modal } from '@mui/material';
 import { toast } from 'react-toastify';
 import Link from 'next/link';
+import PageBreadcrumb from '@/utils/PageBreadcrumbs';
 
 const Checkout = () => {
     const dispatch = useDispatch();
@@ -322,23 +323,13 @@ const Checkout = () => {
 
 
     return (
-        <>
+        <div className='margin_top_all'>
+            <div className="breadcrumb-section breadcrumb__bg">
+                <div className="container">
+                    <PageBreadcrumb />
+                </div>
+            </div>
             <main className="">
-                {/* <main className="margin_top_all"> */}
-                {/* <Breadcrumb
-                    subTitle2="Checkout"
-                    icon2={
-                        <IoBarcodeOutline
-                            color="#363062"
-                            style={{
-                                fontSize: "22px",
-                                marginRight: "4px",
-                                boxSizing: "border-box",
-                                cursor: "pointer"
-                            }}
-                        />
-                    }
-                /> */}
                 {/* Start checkout page area */}
                 {
                     login_cart?.length >= 1 ?
@@ -942,7 +933,7 @@ const Checkout = () => {
                         </div>
                         :
                         <>
-                            <img
+                            {/* <img
                                 style={{
                                     marginLeft: "auto",
                                     marginRight: "auto",
@@ -950,6 +941,18 @@ const Checkout = () => {
                                 }}
                                 src="https://nmkonline.com/images/pages/tumbleweed.gif"
                                 alt=""
+                            /> */}
+                            <img
+                                style={{
+                                    marginLeft: "auto",
+                                    marginRight: "auto",
+                                    display: "block",
+                                    maxWidth: "100%",
+                                    width: "350px", // or remove this for full responsive scaling
+                                    height: "auto",
+                                }}
+                                src="https://nmkonline.com/images/pages/tumbleweed.gif"
+                                alt="Empty Wishlist"
                             />
                         </>
                 }
@@ -997,7 +1000,7 @@ const Checkout = () => {
                     </Box>
                 </Modal>
             </main>
-        </>
+        </div>
     )
 }
 

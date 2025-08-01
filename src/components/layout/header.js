@@ -43,20 +43,72 @@ export default function Header() {
     const searchInputRef = useRef(null);
     const PLACEHOLDER = "Search Parts Numbers...";
 
-    const textColor = pathname === "/" ? "white" : "#000";
-    const isActive = (path) => pathname === path;
 
     useEffect(() => {
-        if (searchActive && searchInputRef.current) {
-            const input = searchInputRef.current;
+        const changeNavbarBg = () => {
+            if (window.scrollY > 0) {
+                setScroll(true);  // Scrolled
+            } else {
+                setScroll(false); // Top of page
+            }
+        };
 
-            setTimeout(() => {
-                input.focus();
-                const length = input.value.length;
-                input.setSelectionRange(length, length);
-            }, 100);
+        window.addEventListener("scroll", changeNavbarBg);
+        changeNavbarBg(); // Initial check on load
+
+        return () => window.removeEventListener("scroll", changeNavbarBg);
+    }, [pathname]);
+
+    const headerClass = scroll ? "header__stickyclose" : "header__sticky";
+
+
+    const textClass = pathname === "/" ? "header--text-white" : "header--text-dark";
+    const forceBgClass = pathname !== "/" ? "header--bg-solid" : "";
+
+
+    // useEffect(() => {
+    //     if (searchActive && searchInputRef.current) {
+    //         const input = searchInputRef.current;
+
+    //         setTimeout(() => {
+    //             input.focus();
+    //             const length = input.value.length;
+    //             input.setSelectionRange(length, length);
+    //         }, 100);
+    //     }
+    // }, [searchActive]);
+
+    useEffect(() => {
+        if (searchActive) {
+            const scrollY = window.scrollY;
+            document.body.style.position = 'fixed';
+            document.body.style.top = `-${scrollY}px`;
+            document.body.style.left = '0';
+            document.body.style.right = '0';
+            document.body.style.overflow = 'hidden';
+            document.body.dataset.scrollY = scrollY.toString(); // store it for later
+        } else {
+            const scrollY = document.body.dataset.scrollY || '0';
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+            window.scrollTo(0, parseInt(scrollY));
         }
+
+        return () => {
+            // Cleanup
+            document.body.style.position = '';
+            document.body.style.top = '';
+            document.body.style.left = '';
+            document.body.style.right = '';
+            document.body.style.overflow = '';
+        };
     }, [searchActive]);
+
+
+
 
     const handleLogout = () => {
         localStorage.removeItem('USER')
@@ -109,14 +161,15 @@ export default function Header() {
     return (
         <div>
 
-            <header className="header-section header sticky-top">
-                {/* // <header className={`main__header ${scroll ? "header__stickyclose" : "header__sticky"}`}> */}
-
+            {/* <header className="header-section header sticky-top"> */}
+            {/* <header className={` ${scroll ? "header__stickyclose" : "header__sticky" }` } > */}
+            <header className={`${headerClass} ${textClass}  ${forceBgClass}`}>
                 <div className="container-fluid">
                     <div className="main__header--inner d-flex justify-content-between align-items-center">
                         <div className='toggle_icon'>
                             <a onClick={toggleDrawer}>
-                                <svg xmlns="http://www.w3.org/2000/svg" className="ionicon offcanvas__header--menu__open--svg" viewBox="0 0 512 512"><path fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="32" d="M80 160h352M80 256h352M80 352h352" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" className="ionicon offcanvas__header--menu__open--svg" viewBox="0 0 512 512">
+                                    <path fill="currentColor" stroke="currentColor" strokeLinecap="round" strokeMiterlimit="10" strokeWidth="32" d="M80 160h352M80 256h352M80 352h352" /></svg>
                             </a>
                         </div>
                         <div className="main__logo">
@@ -135,75 +188,75 @@ export default function Header() {
                             <nav className="header__menu--navigation">
                                 <ul className="header__menu--wrapper d-flex">
                                     <li className="header__menu--items">
-                                        <Link href="/" className={`header__menu--link ${isActive('/') ? 'active' : ''}`} style={{ color: textColor }}>
+                                        <Link prefetch={false} href="/" className="header__menu--link" >
                                             Home
                                         </Link>
                                     </li>
                                     <li className="header__menu--items">
-                                        <Link href="/" className={`header__menu--link ${isActive('/shop-list') ? 'active' : ''}`} style={{ color: textColor }}>
+                                        <Link prefetch={false} href="/" className="header__menu--link" >
                                             Tools & Equiments
                                         </Link>
                                     </li>
                                     <li className="header__menu--items">
-                                        <Link href="/" className={`header__menu--link ${isActive('/shop-details') ? 'active' : ''}`} style={{ color: textColor }}>
+                                        <Link prefetch={false} href="/" className="header__menu--link"  >
                                             Market Place
                                         </Link>
                                     </li>
                                     <li className="header__menu--items">
                                         <Link
-                                            href="/case-studies" className={`header__menu--link ${isActive('/case-studies') ? 'active' : ''}`} style={{ color: textColor }}>
+                                            href="/case-studies" className="header__menu--link" >
 
                                             Car Exchange
                                         </Link>
                                     </li>
                                     <li className="header__menu--items">
-                                        <Link href="/insights" className={`header__menu--link ${isActive('/insights') ? 'active' : ''}`} style={{ color: textColor }}>
+                                        <a className="header__menu--link"  >
                                             Others
                                             <FaAngleDown className="ms-1 mt-1" />
-                                        </Link>
-                                        <ul className="header__sub--menu" >
-                                            <li>
+                                        </a>
+                                        <ul className="header__sub--menu text-black" >
+                                            <li className='header__sub--menu__items'>
                                                 {
                                                     user?.success === true ? "" :
-                                                        <Link href="/login" className="header__sub--menu__link" >login</Link>
+                                                        <Link prefetch={false} href="/login" className="header__sub--menu__link" >login</Link>
                                                 }
                                             </li>
-                                            <li>
+                                            {/* <li>
                                                 {
                                                     user?.success === true ?
-                                                        <Link href="/wishlist" className="header__sub--menu__link" prefetch={false} >Wishlist</Link>
+                                                        <Link prefetch={false} href="/wishlist" className="header__sub--menu__link"  >Wishlist</Link>
+                                                        : ""
+                                                }
+                                            </li> */}
+                                            <li className='header__sub--menu__items'>
+                                                {
+                                                    user?.success === true ?
+                                                        <Link prefetch={false} href="/my-orders" className="header__sub--menu__link"  >My Orders</Link>
                                                         : ""
                                                 }
                                             </li>
-                                            <li>
+                                            <li className='header__sub--menu__items'>
                                                 {
                                                     user?.success === true ?
-                                                        <Link href="/my-orders" className="header__sub--menu__link" prefetch={false} >My Orders</Link>
+                                                        <Link prefetch={false} href="/my-address" className="header__sub--menu__link"  >My Address</Link>
                                                         : ""
                                                 }
                                             </li>
-                                            <li>
+                                            <li className='header__sub--menu__items'>
                                                 {
                                                     user?.success === true ?
-                                                        <Link href="/my-address" className="header__sub--menu__link" prefetch={false} >My Address</Link>
+                                                        <Link prefetch={false} href="/my-estimates" className="header__sub--menu__link"  >My Estimate</Link>
                                                         : ""
                                                 }
                                             </li>
-                                            <li>
+                                            {/* <li>
                                                 {
                                                     user?.success === true ?
-                                                        <Link href="/my-estimates" className="header__sub--menu__link" prefetch={false} >My Estimate</Link>
+                                                        <Link prefetch={false} href="/cart" className="header__sub--menu__link" >Cart</Link>
                                                         : ""
                                                 }
-                                            </li>
-                                            <li>
-                                                {
-                                                    user?.success === true ?
-                                                        <Link href="/cart" className="header__sub--menu__link" >Cart</Link>
-                                                        : ""
-                                                }
-                                            </li>
-                                            <li><Link href="/privacy-policy" className="header__sub--menu__link" >Privacy Policy</Link></li>
+                                            </li> */}
+                                            <li className='header__sub--menu__items'><Link prefetch={false} href="/privacy-policy" className="header__sub--menu__link" >Privacy Policy</Link></li>
                                         </ul>
                                     </li>
                                 </ul>
@@ -273,7 +326,7 @@ export default function Header() {
                                     </AnimatePresence>
                                 </li>
                                 <li className="header__account--items d-none d-lg-block">
-                                    <Link href="/wishlist" className="header__account--btn">
+                                    <Link prefetch={false} href="/wishlist" className="header__account--btn">
                                         <AiOutlineHeart style={{ fontSize: "28px" }} />
                                         {
                                             add_wish?.length > 0 ? <span className="items__count">{add_wish?.length}</span> : ""
@@ -281,7 +334,7 @@ export default function Header() {
                                     </Link>
                                 </li>
                                 <li className="header__account--items d-none d-lg-block">
-                                    <Link href="/cart" className="header__account--btn">
+                                    <Link prefetch={false} href="/cart" className="header__account--btn">
                                         <AiOutlineShoppingCart style={{ fontSize: "28px" }} />
                                         {
                                             user?.success !== true ? <>
@@ -299,7 +352,7 @@ export default function Header() {
                                 <li className="header__account--items d-none d-lg-block">
                                     {
                                         user?.success !== true ?
-                                            <Link className="header__account--btn" href="/login">
+                                            <Link className="header__account--btn" href="/login" prefetch={true}>
                                                 <IoMdContact style={{ fontSize: "28px" }} />
                                             </Link>
                                             : ""
@@ -316,15 +369,15 @@ export default function Header() {
                                                 </div>
                                         }
                                     </a>
-                                    <ul className="header__sub--menu">
+                                    <ul className="header__sub--menu ">
                                         <li className="header__sub--menu__items">
                                             {
                                                 user?.success !== true ?
                                                     ""
                                                     :
-                                                    <a className="header__account--btn" title='Logout' onClick={handleOpenDelete}>
+                                                    <button className="header__account--btn" title='Logout' onClick={handleOpenDelete}>
                                                         Logout
-                                                    </a>
+                                                    </button>
                                             }
                                         </li>
                                     </ul>
@@ -332,12 +385,12 @@ export default function Header() {
                                 {/* add singup */}
                                 {/* {
                             user?.success === true ? (
-                                <Link href="/" className="position-relative  ms-2">
+                                <Link prefetch={false} href="/" className="position-relative  ms-2">
                                     <div className='circle'>
                                         <span className='circle-inner'>{user?.data?.email ? (user?.data?.email).substring(0, 1).toUpperCase() : 'M'}</span>
                                     </div>
                                 </Link>
-                            ) : <Link href="/login" className="position-relative btn btn-outline ms-2">
+                            ) : <Link prefetch={false} href="/login" className="position-relative btn btn-outline ms-2">
                                 <AiOutlineUser style={{ fontSize: "28px" }} />
                             </Link>
                         } */}
@@ -350,32 +403,51 @@ export default function Header() {
             </header >
             {/* Start Offcanvas stikcy toolbar */}
             <div className="offcanvas__stikcy--toolbar">
-                <ul className="d-flex justify-content-between text-center">
+                <ul className="d-flex justify-content-between text-center w-full">
                     <li className="offcanvas__stikcy--toolbar__list">
-                        <a className="offcanvas__stikcy--toolbar__btn" href="/">
-                            <AiOutlineHome style={{ fontSize: "20px" }} className={`${window.location.pathname == "/" ? "icon_toolbar_active" : ""}`} />
+                        <Link href="/" className="offcanvas__stikcy--toolbar__btn">
+                            <div className={`toolbar__icon ${pathname === '/' ? 'active' : ''}`}>
+                                <AiOutlineHome size={22} />
+                            </div>
                             <span className="offcanvas__stikcy--toolbar__label">Home</span>
-                        </a>
+                        </Link>
                     </li>
                     <li className="offcanvas__stikcy--toolbar__list">
-                        <a className="offcanvas__stikcy--toolbar__btn" href="/market-place">
-                            <BsShop style={{ fontSize: "20px" }} className={`${window.location.pathname == "/market-place" ? "icon_toolbar_active" : ""}`} />
-                            <span className="offcanvas__stikcy--toolbar__label">Market Place</span>
-                        </a>
+                        <Link href="/market-place" className="offcanvas__stikcy--toolbar__btn">
+                            <div className={`toolbar__icon ${pathname === '/market-place' ? 'active' : ''}`}>
+                                <BsShop size={22} />
+                            </div>
+                            <span className="offcanvas__stikcy--toolbar__label">Shop</span>
+                        </Link>
                     </li>
                     <li className="offcanvas__stikcy--toolbar__list">
-                        <a className="offcanvas__stikcy--toolbar__btn" href="/cart">
-                            <AiOutlineShoppingCart style={{ fontSize: "22px" }} className={`${window.location.pathname == "/cart" ? "icon_toolbar_active" : ""}`} />
+                        <Link href="/cart" className="offcanvas__stikcy--toolbar__btn">
+                            <div className={`toolbar__icon ${pathname === '/cart' ? 'active' : ''}`}>
+                                <AiOutlineShoppingCart size={22} />
+                                {
+                                    user?.success !== true ? <>
+                                        {
+                                            addto_cart?.length !== 0 ? <span className="items__count">{addto_cart?.length}</span> : ""
+                                        }
+                                    </> : <>
+                                        {
+                                            cartCount?.length !== 0 ? <span className="items__count">{cartCount}</span> : ""
+                                        }
+                                    </>
+                                }
+                            </div>
                             <span className="offcanvas__stikcy--toolbar__label">Cart</span>
-                        </a>
+                        </Link>
                     </li>
                     <li className="offcanvas__stikcy--toolbar__list">
-                        <Link className="offcanvas__stikcy--toolbar__btn" href="/wishlist">
-                            <AiOutlineHeart style={{ fontSize: "24px" }} className={`${window.location.pathname == "/wishlist" ? "icon_toolbar_active" : ""}`} />
+                        <Link href="/wishlist" className="offcanvas__stikcy--toolbar__btn">
+                            <div className={`toolbar__icon ${pathname === '/wishlist' ? 'active' : ''}`}>
+                                <AiOutlineHeart size={22} />
+                                {
+                                    add_wish?.length > 0 ? <span className="items__count">{add_wish?.length}</span> : ""
+                                }
+                            </div>
                             <span className="offcanvas__stikcy--toolbar__label">Wishlist</span>
-                            {
-                                add_wish?.length !== 0 ? <span className="items__count">{add_wish?.length}</span> : ""
-                            }
                         </Link>
                     </li>
                 </ul>
@@ -430,7 +502,7 @@ export default function Header() {
                     onClose={toggleDrawer}
                     direction='left'
                     className='bla bla bla'
-                    style={{ zIndex: 999 }}
+                    style={{ zIndex: 1000 }}
                 >
                     <div className="offcanvas__inner">
                         <div className="offcanvas__logo">
@@ -537,7 +609,7 @@ export default function Header() {
                                         </>
                                         :
                                         <>
-                                            <Link href="/login" onClick={handleOpenDelete}>
+                                            <Link prefetch={false} href="/login" onClick={handleOpenDelete}>
                                                 <span className="offcanvas__account--items__label" onClick={toggleDrawer}>
                                                     Logout
                                                 </span>
